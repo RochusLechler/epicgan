@@ -1,5 +1,3 @@
-#copied the whole content of this filw from Mr Baldini's pyproject.toml-file
-
 
 
 
@@ -22,7 +20,7 @@ name = "epicgan"
 #
 # For a discussion on single-sourcing the version, see
 # https://packaging.python.org/guides/single-sourcing-package-version/
-version = "0.0.a0"  # Required
+version = "1.0"  # Required
 
 # This is a one-line description or tagline of what your project does. This
 # corresponds to the "Summary" metadata field:
@@ -108,7 +106,18 @@ classifiers = [
 # For an analysis of this field vs pip's requirements files see:
 # https://packaging.python.org/discussions/install-requires-vs-requirements/
 dependencies = [
-  "numpy", "torch", "scipy"
+  "sys",
+  "os"
+  "logging"
+  "numpy",
+  "torch",
+  "scipy",
+  "energyflow",
+  "tqdm",
+  "jetnet",
+  "time",
+  "pickle",
+  "h5py"
 ]
 
 # List additional groups of dependencies here (e.g. development
