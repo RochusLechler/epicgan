@@ -23,13 +23,13 @@ def calc_multiplicities(p_dataset):
     Assumed shape of dataset: [total_size, n_points, n_features]
 
 
-    Arguments:
+    Arguments
     -------------
 
     p_dataset: np.ndarray
         np.ndarray of the dataset in shape [total_size, n_points, n_features]
 
-    Returns:
+    Returns
     ---------
 
     unique_vals: np.array
@@ -63,7 +63,7 @@ def calc_kde(p_dataset, file_path = None):
     with nonzero p_t for a jet using Gaussian kernels.
     Has an option to save the kde to a .pkl-file
 
-    Arguments:
+    Arguments
     ----------------
     p_dataset: np.ndarray
         np.ndarray of the dataset in shape [total_size, n_points, n_features]
@@ -72,7 +72,7 @@ def calc_kde(p_dataset, file_path = None):
         When specified, the function will try to dump the calculated KDE here;
         should end in .pkl
 
-    Returns:
+    Returns
     -----------
 
     kde: scipy.stats.gaussian_kde
@@ -98,13 +98,13 @@ def calc_kde(p_dataset, file_path = None):
 def jet_masses(data):
     """Calculates the total mass of each jet within the given dataset.
 
-    Arguments:
+    Arguments
     -------------
 
     data:
         data for which to compute the jet masses
 
-    Returns:
+    Returns
     -------------
 
     masses: np.array
@@ -123,13 +123,13 @@ def jet_masses(data):
 def jet_pts(data):
     """Calculates the total transverse momentum of each jet within the given dataset.
 
-    Arguments:
+    Arguments
     -------------
 
     data:
         data for which to compute the jet p_t
 
-    Returns:
+    Returns
     -------------
 
     pts: np.array
@@ -145,13 +145,13 @@ def jet_pts(data):
 def jet_etas(data):
     """Calculates pseudorapidity eta of each jet within the given dataset.
 
-    Arguments:
+    Arguments
     -------------
 
     data:
         data for which to compute eta
 
-    Returns:
+    Returns
     -------------
 
     etas: np.array
@@ -166,13 +166,13 @@ def jet_etas(data):
 def jet_phis(data):
     """Calculates the azimuthal angle phi of each jet within the given dataset.
 
-    Arguments:
+    Arguments
     -------------
 
     data:
         data for which to compute the jet masses
 
-    Returns:
+    Returns
     -------------
 
     phis: np.array
@@ -188,13 +188,13 @@ def jet_phis(data):
 def center_jets(data):
     """Centers the eta- and phi-coordinates for every jet.
 
-    Arguments:
+    Arguments
     -----------
 
     data: np.array
         data to be centered
 
-    Returns:
+    Returns
     -----------
     data: np.array
         centered data
@@ -222,13 +222,13 @@ def center_jets(data):
 def order_array_pt(data):
     """Sorts input array in p_t per jet in decreasing order.
 
-    Arguments:
+    Arguments
     ------------
 
     data: np.array
         unordered data
 
-    Returns:
+    Returns
     ----------
 
     ordered_data:
@@ -260,7 +260,7 @@ def save_model(generator, discriminator, optimizer_g, optimizer_d,
     for each to a file. It saves a dictionary of all the parameters for
     all the structures using the .save_dict()-method.
 
-    Arguments:
+    Arguments
     ------------
 
     generator: Generator

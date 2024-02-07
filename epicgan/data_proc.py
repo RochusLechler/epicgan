@@ -21,14 +21,14 @@ def get_dataset_path(dataset_name):
     """Returns the path to the specified dataset. The folder is hard-coded, please
     change to the folder where the dataset hdf5-files are stored.
 
-    Arguments:
+    Arguments
     ---------------
 
     dataset_name: str
         specification of the dataset, either "gluon30", "quark30", "top30",
         "gluon150", "quark150" or "top150"
 
-    Returns:
+    Returns
     ------------
 
     path: str
@@ -54,7 +54,7 @@ def get_dataset_path(dataset_name):
 def get_dataset(dataset_name, drop_mask = True, reorder = True):
     """Returns the specified dataset as a np.ndarray.
 
-    Arguments:
+    Arguments
     ---------------
 
     dataset_path: str
@@ -67,7 +67,7 @@ def get_dataset(dataset_name, drop_mask = True, reorder = True):
         if True, the particle features will be ordered [p_t, eta, phi]; should
         always be set to False, when drop_mask is False
 
-    Returns:
+    Returns
     ------------
 
     dataset: np.array
@@ -99,14 +99,14 @@ def dataset_properties(dataset_train):
     """Computes mean, standard deviation, minmum value and maximum value for
     each particle feature not considering particles that were zero-padded.
 
-    Arguments:
+    Arguments
     ---------------
 
     dataset_train: np.ndarray
         the dataset to be evaluated, usually the training set
 
 
-    Returns:
+    Returns
     ------------
 
     means: list
@@ -144,7 +144,7 @@ def split_dataset(dataset, splits = [0.7, 0.15, 0.15], rng = None):
     """Splits the dataset according to given splits. It is possible to
     pass random generator for shuffling.
 
-    Arguments:
+    Arguments
     -------------
 
     dataset: np.array
@@ -159,7 +159,7 @@ def split_dataset(dataset, splits = [0.7, 0.15, 0.15], rng = None):
         random number generator; if equals None, no shuffling will be performed
 
 
-    Returns:
+    Returns
     ------------
 
     train_set: np.array
@@ -191,7 +191,7 @@ def normalise_dataset(data, means, stds, norm_sigma = 5):
     """Normalises the given data to mean 0 and standard deviation norm_sigma.
     Expected shape is [len_data, n_points, n_features]
 
-    Arguments:
+    Arguments
     -------------
 
     data: np.array
@@ -206,7 +206,7 @@ def normalise_dataset(data, means, stds, norm_sigma = 5):
     norm_sigma: int or float, default: 5
         standard deviation to which all of the data is normalised
 
-    Returns:
+    Returns
     ----------
 
     data: np.array
@@ -223,7 +223,7 @@ def normalise_dataset(data, means, stds, norm_sigma = 5):
 def set_min_pt(dataset, min_pt):
     """Sets all values of 0 < p_t < min_pt within dataset to min_pt
 
-    Arguments:
+    Arguments
     ------------
 
     dataset: np.array
@@ -232,7 +232,7 @@ def set_min_pt(dataset, min_pt):
     min_pt: float
         minimum value to which to set all values of p_t lower than it
 
-    Returns:
+    Returns
     -------------
 
     dataset: np.array
@@ -249,13 +249,13 @@ def get_kde(dataset_name):
     """Loads the (precomputed) kernel density estimation of n_eff (number of particles
     with nonzero p_t) for the given dataset
 
-    Arguments:
+    Arguments
     ------------
 
     dataset_name: str
         specifies the dataset for which to load the kde
 
-    Returns:
+    Returns
     -------------
 
     kde: scipy.stats.gaussian_kde
@@ -274,7 +274,7 @@ def get_noise(n_points, batch_size = 128, dim_global = 10, dim_particle = 3, rng
     """Samples the noise needed as input for the generator with mean 0 and standard
     deviation 1
 
-    Arguments:
+    Arguments
     --------------
 
     n_points: int
@@ -297,7 +297,7 @@ def get_noise(n_points, batch_size = 128, dim_global = 10, dim_particle = 3, rng
     device: string, default: "cuda"
         device to which to send variables
 
-    Returns:
+    Returns
     ------------
 
     noise_global: torch.Tensor
@@ -331,7 +331,7 @@ class PreparedDataset(IterableDataset):
     def __init__(self, dataset, batch_size = 128, rng = None):
         """Initialising the iterable dataset.
 
-        Arguments:
+        Arguments
         ------------
 
         dataset: np.array
@@ -365,7 +365,7 @@ class PreparedDataset(IterableDataset):
         number of particles with p_t != 0, meaning there can (and most likely will)
         be more than one batch of batch size < self.batch_size.
 
-        Returns:
+        Returns
         -----------
 
         num_iters: int
@@ -390,14 +390,14 @@ class PreparedDataset(IterableDataset):
         """Makes batches of size self.batch_size or less for remaining samples.
 
 
-        Arguments:
+        Arguments
         -----------
 
         data: np.array
             dataset to be split into batches of equal n_eff
 
 
-        Returns:
+        Returns
         ----------
 
         batch_dict: dict

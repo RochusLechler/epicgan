@@ -22,7 +22,7 @@ def compute_wasserstein_distance(network, data_set, kde, batch_size = 128, n_tot
     validation set and the generated jets. The return is the mean value of the
     Wasserstein distances for 'runs' number of generated sets.
 
-    Arguments:
+    Arguments
     --------------
 
     network: Generator
@@ -68,7 +68,7 @@ def compute_wasserstein_distance(network, data_set, kde, batch_size = 128, n_tot
         device to which to send variables
 
 
-    Returns:
+    Returns
     ------------
 
     w_dist_mean: float
@@ -125,8 +125,8 @@ def evaluation_means(network, data_set, kde, calc_fpnd = True, calc_w_dist_p = T
     the particle features in data_set and generated events and the Frechet
     ParticleNet Distance (FPND) for generated events.
 
-    Arguments:
-    --------------
+    Arguments
+    -------------
 
     network: Generator
         generator network with which to perform the evaluation
@@ -182,14 +182,14 @@ def evaluation_means(network, data_set, kde, calc_fpnd = True, calc_w_dist_p = T
         device to which to send variables
 
 
-    Returns:
-    -----------
+    Returns
+    ------------
 
     w_distances_list: list
         contains Wasserstein distance for each of the particle features averaged
         over all runs
 
-    fpnd_score: float 
+    fpnd_score: float
         the FPND score of the first m generated events, with m being the size
         of data_set
     """
@@ -318,7 +318,7 @@ def generation_loop(network, n_points, kde, batch_size = 128, n_tot_generation =
     samples will be killed by the requirement 1 <= n_eff <= n_points).
 
 
-    Arguments:
+    Arguments
     -------------
 
     network: Generator
@@ -351,7 +351,7 @@ def generation_loop(network, n_points, kde, batch_size = 128, n_tot_generation =
         device to which to send variables
 
 
-    Returns:
+    Returns
     -----------
 
     generated_events: np.array
