@@ -113,8 +113,6 @@ dependencies = [
   "energyflow",
   "tqdm",
   "jetnet",
-  "time",
-  "pickle",
   "h5py"
 ]
 
