@@ -5,9 +5,7 @@ and discriminator as well as general functionalities.
 
 import unittest
 import torch
-from epicgan import models
-from epicgan import utils
-from epicgan import calc_kde
+from epicgan import utils, models
 
 
 class TestDataset(unittest.TestCase):
@@ -72,4 +70,4 @@ class TestKDE(TestDataset):
 
     def test_kde(self):
         #using dataset with incompatible dimensions
-        self.assertRaises(SystemExit, calc_kde.calc_kde, self.dummy_g_dataset)
+        self.assertRaises(SystemExit, utils.calc_kde, self.dummy_g_dataset)
