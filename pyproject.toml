@@ -107,8 +107,8 @@ classifiers = [
 # https://packaging.python.org/discussions/install-requires-vs-requirements/
 dependencies = [
   "sys",
-  "os"
-  "logging"
+  "os",
+  "logging",
   "numpy",
   "torch",
   "scipy",
