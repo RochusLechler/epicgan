@@ -6,18 +6,20 @@ import os
 import h5py
 import numpy as np
 import pickle
+import torch
 from torch.utils.data import IterableDataset, DataLoader
 
 from epicgan import utils
 
 logger = logging.getLogger("main")
 
-datasets_folder = "/home/rochus/Documents/Studium/semester_pisa/cmepda/exam_project/JetNet_datasets"
+datasets_folder = "/home/rochus/Documents/Studium/semester_pisa/cmepda/exam_project/JetNet_datasets/"
 
 
 
 def get_dataset_path(dataset_name):
-    """returns path to required dataset
+    """Returns the path to the specified dataset. The folder is hard-coded, please
+    change to the folder where the dataset hdf5-files are stored.
 
     Arguments:
     ---------------
@@ -25,6 +27,13 @@ def get_dataset_path(dataset_name):
     dataset_name: str
         specification of the dataset, either "gluon30", "quark30", "top30",
         "gluon150", "quark150" or "top150"
+
+    Returns:
+    ------------
+
+    path: str
+        path of the dataset in memory
+
     """
     file_suffix = ".hdf5"
     try:
@@ -43,7 +52,7 @@ def get_dataset_path(dataset_name):
 
 
 def get_dataset(dataset_name, drop_mask = True, reorder = True):
-    """returns the dataset as a numpy object
+    """Returns the specified dataset as a np.ndarray.
 
     Arguments:
     ---------------
@@ -57,6 +66,12 @@ def get_dataset(dataset_name, drop_mask = True, reorder = True):
     reorder: bool, default = True
         if True, the particle features will be ordered [p_t, eta, phi]; should
         always be set to False, when drop_mask is False
+
+    Returns:
+    ------------
+
+    dataset: np.array
+        contains the dataset specified in dataset_name
     """
 
     dataset_path = get_dataset_path(dataset_name)
@@ -81,14 +96,30 @@ def get_dataset(dataset_name, drop_mask = True, reorder = True):
 
 
 def dataset_properties(dataset_train):
-    """computes mean, standard deviation, minmum value and maximum value for
-    each feature and each particle of each jet that was not zero-padded.
+    """Computes mean, standard deviation, minmum value and maximum value for
+    each particle feature not considering particles that were zero-padded.
 
     Arguments:
     ---------------
 
     dataset_train: np.ndarray
         the dataset to be evaluated, usually the training set
+
+
+    Returns:
+    ------------
+
+    means: list
+        contains the mean value of each particles feature
+
+    stds: list
+        contains the standard deviation of each particle feature
+
+    mins: list
+        contains the minimum value of each particle feature
+
+    maxs: list
+        contains the maximum value of each particle feature
     """
 
     means = []
@@ -109,12 +140,45 @@ def dataset_properties(dataset_train):
 
 
 
-def split_dataset(dataset, splits = [0.7, 0.15, 0.15]):
-    """splits the dataset according to splits, also shuffling. It is possible to
-    pass a seeded random generator for shuffling.
+def split_dataset(dataset, splits = [0.7, 0.15, 0.15], rng = None):
+    """Splits the dataset according to given splits. It is possible to
+    pass random generator for shuffling.
 
+    Arguments:
+    -------------
+
+    dataset: np.array
+        dataset to be split
+
+    splits: list, tuple or np.array, default: [0.7, 0.15, 0.15]
+        fractions according to which the dataset is split into training set,
+        validation set, test set; should contain 3 non-negative entries adding
+        up to 1.
+
+    rng: np.random.Generator, default: None
+        random number generator; if equals None, no shuffling will be performed
+
+
+    Returns:
+    ------------
+
+    train_set: np.array
+        dataset containing percentage of original dataset according to first
+        entry of splits.
+
+    val_set: np.array
+        dataset containing percentage of original dataset according to second
+        entry of splits.
+
+    test_set: np.array
+        dataset containing percentage of original dataset according to third
+        entry of splits.
     """
+
     total_length = len(dataset)
+    if rng is not None:
+        permutation = rng.permutation(total_length)
+        dataset = dataset[permutation]
 
     train_set = dataset[0:int(splits[0]*total_length)]
     val_set   = dataset[int(splits[0]*total_length):int((splits[0]+splits[1])*total_length)]
@@ -130,8 +194,8 @@ def normalise_dataset(data, means, stds, norm_sigma = 5):
     Arguments:
     -------------
 
-    data: torch.Tensor
-        contains data of shape [len_data, n_points, n_features]
+    data: np.array
+        contains data of expected shape [len_data, n_points, n_features]
 
     means: list or np.array
         contains the mean value for every feature, has shape [n_features]
@@ -141,18 +205,62 @@ def normalise_dataset(data, means, stds, norm_sigma = 5):
 
     norm_sigma: int or float, default: 5
         standard deviation to which all of the data is normalised
+
+    Returns:
+    ----------
+
+    data: np.array
+        contains the normalised dataset
     """
 
-    n_features = data.size(2)
+    n_features = data.shape[2]
     for j in range(n_features):
         data[:,:,j] = (data[:,:,j] - means[j])/(stds[j]/norm_sigma)
 
     return data
 
 
+def set_min_pt(dataset, min_pt):
+    """Sets all values of 0 < p_t < min_pt within dataset to min_pt
+
+    Arguments:
+    ------------
+
+    dataset: np.array
+        dataset for which to perform the operation
+
+    min_pt: float
+        minimum value to which to set all values of p_t lower than it
+
+    Returns:
+    -------------
+
+    dataset: np.array
+        datset that has minimum p_t-value min_pt
+    """
+
+    mask = (dataset[:,:,0] < min_pt) & (dataset[:,:,0] > 0)
+    (dataset[:,:,0])[mask] = min_pt
+
+    return dataset
+
 
 def get_kde(dataset_name):
-    """loads the (precomputed) kernel density estimation for the given dataset
+    """Loads the (precomputed) kernel density estimation of n_eff (number of particles
+    with nonzero p_t) for the given dataset
+
+    Arguments:
+    ------------
+
+    dataset_name: str
+        specifies the dataset for which to load the kde
+
+    Returns:
+    -------------
+
+    kde: scipy.stats.gaussian_kde
+        gaussian_kde-object containing the specified kde
+
     """
     path = datasets_folder + dataset_name + ".pkl"
 
@@ -162,14 +270,16 @@ def get_kde(dataset_name):
     return kde
 
 
-def get_noise(n_points, batch_size = 128, dim_global = 10, dim_particle = 3, rng = np.random, device = "cuda"):
-    """sample the noise needed as input for the generator.
+def get_noise(n_points, batch_size = 128, dim_global = 10, dim_particle = 3, rng = None, device = "cuda"):
+    """Samples the noise needed as input for the generator with mean 0 and standard
+    deviation 1
 
     Arguments:
     --------------
 
     n_points: int
-        number of particles per jet, accepts 30 and 150
+        number of particles per jet to be generated; note that this refers to the
+        number of non-zero-padded particles, it does not have to equal 30 or 150
 
     batch_size: int, default: 128
         batch size to be sampled
@@ -180,18 +290,34 @@ def get_noise(n_points, batch_size = 128, dim_global = 10, dim_particle = 3, rng
     dim_local: int, default: 3
         dimension of the space of particle features
 
-    rng: Generator, default: np.random
-        random number generator, specify this to ensure results are reproducible
+    rng: Generator, default: None
+        random number generator, specify this to ensure results are reproducible;
+        if equals None, the default torch.Generator will be employed
 
     device: string, default: "cuda"
         device to which to send variables
+
+    Returns:
+    ------------
+
+    noise_global: torch.Tensor
+        contains noise samples of shape [batch_size, dim_global]
+
+    noise_particle: torch.Tensor
+        contains noise samples of shape [batch_size, n_points, dim_particle]
     """
+    if rng is not None:
+        noise_global = rng.normal(loc = 0., scale = 1., size = (batch_size, dim_global))
+        noise_particle = rng.normal(loc = 0., scale = 1., size = (batch_size, n_points, dim_particle))
+        noise_global = torch.Tensor(noise_global).to(device)
+        noise_particle = torch.Tensor(noise_particle).to(device)
 
-    noise_global = torch.empty((batch_size, dim_global), device = device)
-    noise_particle  = torch.empty((batch_size, n_points, dim_particle), device = device)
+    else:
+        noise_global = torch.empty((batch_size, dim_global), device = device)
+        noise_particle  = torch.empty((batch_size, n_points, dim_particle), device = device)
+        noise_global.normal_(mean = 0.0, std = 1.0)
+        noise_particle.normal_(mean = 0.0, std = 1.0)
 
-    noise_global.normal(mean = 0.0, std = 1.0)
-    noise_particle.normal(mean = 0.0, std = 1.0)
 
     return noise_global, noise_particle
 
@@ -199,7 +325,7 @@ def get_noise(n_points, batch_size = 128, dim_global = 10, dim_particle = 3, rng
 
 
 class PreparedDataset(IterableDataset):
-    """
+    """A class preparing the dataset for training.
     """
 
     def __init__(self, dataset, batch_size = 128, rng = None):
@@ -208,12 +334,13 @@ class PreparedDataset(IterableDataset):
         Arguments:
         ------------
 
-        dataset:
+        dataset: np.array
+            dataset over which to iterate
 
         batch_size: int, default: 128
             batch size to be returned by an associated iterator
 
-        rng: Generator, default: None
+        rng: np.random.Generator, default: None
             random number generator used for shuffling; if equal to None, data
             will not be shuffled
         """
@@ -226,18 +353,27 @@ class PreparedDataset(IterableDataset):
 
         self.len_dataset = self.dataset.shape[0]
 
-    def __getitem__(self):
-        super(PreparedDataset).__getitem__()
+    def __getitem__(self, index):
+        super(PreparedDataset).__getitem__(index)
 
 
 
     def num_iter_per_ep(self):
-        """Method gives as output the number of iterations needed to complete an
+        """Gives as output the number of iterations needed to complete an
         epoch given the specified batch size.
         Note that training is performed on batches each containing jets with equal
-        number of particles with p_t != 0
+        number of particles with p_t != 0, meaning there can (and most likely will)
+        be more than one batch of batch size < self.batch_size.
+
+        Returns:
+        -----------
+
+        num_iters: int
+            number of iterations required to complete an epoch
         """
 
+        #frequencies is an array containing the number of samples corresponding to
+        #each value n_eff
         _, frequencies = utils.calc_multiplicities(self.dataset)
         num_iters = 0
         for f in frequencies:
@@ -248,10 +384,29 @@ class PreparedDataset(IterableDataset):
             #add another iteration for the "rest" that has length <= batch_size
             num_iters += 1
 
-        return num_iters
+        return int(num_iters)
 
     def define_batches(self, data):
-        """Makes batches
+        """Makes batches of size self.batch_size or less for remaining samples.
+
+
+        Arguments:
+        -----------
+
+        data: np.array
+            dataset to be split into batches of equal n_eff
+
+
+        Returns:
+        ----------
+
+        batch_dict: dict
+            nested dictionary; contains a dictionary of batches for every unique
+            value n_eff
+
+        batch_ids: np.array
+            each entry contains a tuple of indices, the first indexing the value
+            of n_eff and the second indexing the batch.
         """
 
         #same functionality as utils.calc_multiplicities, but we need the intermediate nonzero counts
@@ -263,14 +418,15 @@ class PreparedDataset(IterableDataset):
         batch_dict = {}
         batch_ids_list  = []
 
-        #loop over all the unique values
+        #loop over all the unique values of n_eff
         for unique_idx, unique_val in enumerate(unique_vals):
             #extract values with that specific value
 
             mask = nonzero_counts == unique_val
             #unique dataset for the specific value of n
             data_unique = data[mask]
-            #drop the particles that were zero-padded
+            #drop the particles that were zero-padded, note that the particles
+            #are ordered in descending order in p_t
             data_unique = data_unique[:,0:unique_val,:]
 
             n_samples = len(data_unique)
@@ -308,7 +464,9 @@ class PreparedDataset(IterableDataset):
 
 
     def __iter__(self):
-        """Defining how to sample a batch from the dataset
+        """Defining how to sample a batch from the dataset. Note that this scheme
+        does not raise a StopIteration. The breakout has to be implemented
+        explicitly when defining the training.
         """
         #shuffle data
         if self.rng is not None:
@@ -326,7 +484,7 @@ class PreparedDataset(IterableDataset):
             batch_ids = batch_ids[permutation]
 
 
-        #implement now the loop that yields the n_samples
+        #implement now the loop that yields the batches
         j = 0 #index used to draw samples
         while True:
             while j < len(batch_ids):
@@ -345,7 +503,7 @@ class PreparedDataset(IterableDataset):
                 permutation = self.rng.permutation(len(data))
                 data = data[permutation]
 
-                batch_dict, batch_ids = define_batches(data)
+                batch_dict, batch_ids = self.define_batches(data)
 
                 permutation = self.rng.permutation(len(batch_ids))
                 batch_ids = batch_ids[permutation]

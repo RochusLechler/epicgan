@@ -16,7 +16,7 @@ class EpicGanLayer(nn.Module):
     with variable input, output and hidden size.
     """
 
-    def __init__(self, n_points, hid_size_p, hid_size_g, hid_size_g_in):
+    def __init__(self, hid_size_p, hid_size_g, hid_size_g_in):
         """particle multiplicity n_points needed here, because of the retrieval from
         global features to the hid_size_p*n_points point features
         No default values given, because this constructor is only to be called from
@@ -24,7 +24,6 @@ class EpicGanLayer(nn.Module):
         """
         super(EpicGanLayer, self).__init__()
 
-        self.n_points = n_points
         self.hid_size_p = hid_size_p
         self.hid_size_g = hid_size_g
         self.hid_size_g_in = hid_size_g_in    #latent dimension between the two layers of Phi_in_g
@@ -41,6 +40,8 @@ class EpicGanLayer(nn.Module):
         """
         p_data has shape [batch_size, n_points, input_size_p]
         """
+        n_eff = int(p_data.shape[1])
+
         p_mean = torch.mean(p_data, 1)  #calculates mean over n_points
         p_sum = torch.sum(p_data, 1)    #calculates sum over n_points
 
@@ -50,7 +51,8 @@ class EpicGanLayer(nn.Module):
 
         #recreate the needed dimension for particle features
         #use torch.Tensor.view(shape) to reintroduce the 2nd dimension (number of particles)
-        p_interm = (g_interm.view([-1, 1, self.hid_size_g])).repeat([1, self.n_points, 1])
+
+        p_interm = (g_interm.view([-1, 1, self.hid_size_g])).repeat([1, n_eff, 1])
         p_interm = leaky_relu(self.distrib(torch.cat([p_interm, p_data], dim = 2)))
         p_interm = leaky_relu(self.p_out(p_interm) + p_data)
 
@@ -93,8 +95,7 @@ class Generator(nn.Module):
 
         self.epic_layers = []
         for _ in range(self.num_epic_layers):
-            self.epic_layers.append(EpicGanLayer(n_points = self.n_points,
-                                    hid_size_p = self.hid_size_p,
+            self.epic_layers.append(EpicGanLayer(hid_size_p = self.hid_size_p,
                                     hid_size_g = self.hid_size_g,
                                     hid_size_g_in = self.hid_size_g_in))
 
@@ -155,8 +156,7 @@ class Discriminator(nn.Module):
 
         self.epic_layers = []
         for _ in range(self.num_epic_layers):
-            self.epic_layers.append(EpicGanLayer(n_points = self.n_points,
-                                    hid_size_p = self.hid_size_p,
+            self.epic_layers.append(EpicGanLayer(hid_size_p = self.hid_size_p,
                                     hid_size_g = self.hid_size_g,
                                     hid_size_g_in = self.hid_size_g_in))
 
