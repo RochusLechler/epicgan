@@ -42,8 +42,8 @@ class TestModels(TestDataset):
         dummy_gen        = models.Generator(self.n_points)
         dummy_dis        = models.Discriminator(self.n_points)
         #for epic layer, set hid_size_g_in = hid_size_p = 128 as in paper
-        dummy_epic_layer = models.EpicGanLayer(self.n_points, self.hid_size_p,
-                                               self.hid_size_g, self.hid_size_p)
+        dummy_epic_layer = models.EpicGanLayer(self.hid_size_p, self.hid_size_g,
+                                            self.hid_size_p)
 
 
         self.gen_out                = dummy_gen.forward(self.dummy_p_dataset, self.dummy_g_dataset)

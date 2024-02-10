@@ -78,8 +78,10 @@ def calc_kde(p_dataset, file_path = None):
     kde: scipy.stats.gaussian_kde
         gaussian_kde-object
     """
-    unique_vals, frequencies = calc_multiplicities(p_dataset)
-    kde = gaussian_kde(unique_vals, weights = frequencies)
+
+    mults = np.count_nonzero(p_dataset[:,:,0], axis = 1)
+    kde = gaussian_kde(mults)
+
 
     if file_path is not None:
         try:
@@ -90,6 +92,7 @@ def calc_kde(p_dataset, file_path = None):
             logger.warning("""When specifying file_path, please give a
                            string ending in .pkl""")
             logger.warning("The KDE-object was not saved")
+
     return kde
 
 
@@ -179,7 +182,6 @@ def jet_phis(data):
         phi for every jet
     """
     jets_cartesian = energyflow.p4s_from_ptyphims(data)
-    #sum over all particles within jet to obtain overall mass
     phis = energyflow.phis_from_p4s(jets_cartesian.sum(axis=1), phi_ref=0)
     return phis
 

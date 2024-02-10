@@ -15,9 +15,11 @@ logger = logging.getLogger("main")
 
 
 
-def compute_wasserstein_distance(network, data_set, kde, batch_size = 128, n_tot_generation = 300000,
-                    dim_global = 10, dim_particle = 3, rng = None,
-                    set_min_pt = True, min_pt = 0, runs = 10, device = "cuda"):
+def compute_wasserstein_distance(network, data_set, kde, batch_size = 128,
+                    n_tot_generation = 300000, dim_global = 10, dim_particle = 3,
+                    rng = None, set_min_pt = True, min_pt = 0, center_gen = True,
+                    inv_normalise_data = True, inv_means = np.zeros(3), inv_stds = np.ones(3),
+                    inv_norm_sigma = 1, runs = 10, device = "cuda"):
     """Computes the Wasserstein distance between masses of the jets of the
     validation set and the generated jets. The return is the mean value of the
     Wasserstein distances for 'runs' number of generated sets.
@@ -58,6 +60,24 @@ def compute_wasserstein_distance(network, data_set, kde, batch_size = 128, n_tot
     min_pt: int or float, default: 0
         minimum value to which all p_t below will be set, if set_min_pt is True
 
+    center_gen: bool, default: True
+        if True, the eta- and phi-coordinates of the generated events will be
+        centered
+
+    inv_normalise_data: bool, default: True
+        if True, the generated events will be renormalised to have the statistical
+        properties of the training set
+
+    inv_means: list or np.array, default: np.zeros(3)
+        mean value for each particle feature to which to renormalise the generated events
+
+    inv_stds: list or np.array, default: np.ones(3)
+        standard deviation value for each particle feature to which to renormalise
+        the generated events
+
+    inv_norm_sigma: float or int, default: 1
+        std-value to which the real input data was normalised
+
     runs: int, default: 10
         number of disjoint subsets of generated events that will be used to compute
         the Wasserstein distances, the returned Wasserstein distances will be the
@@ -79,17 +99,20 @@ def compute_wasserstein_distance(network, data_set, kde, batch_size = 128, n_tot
     generated_events = generation_loop(network, n_points, kde,
                         batch_size = batch_size, n_tot_generation = n_tot_generation,
                         dim_global = dim_global, dim_particle = dim_particle, rng = rng,
-                        device = device)
-
+                        inv_normalise_data = inv_normalise_data, inv_means = inv_means,
+                        inv_stds = inv_stds, inv_norm_sigma = inv_norm_sigma, device = device)
 
     #post-process generated events by setting minimum p_t and centering
-    generated_events = data_proc.set_min_pt(generated_events, min_pt)
-    generated_events = utils.center_jets(generated_events)
-
+    if set_min_pt:
+        generated_events = data_proc.set_min_pt(generated_events, min_pt)
+    if center_gen:
+        generated_events = utils.center_jets(generated_events)
 
     #get masses of the jets
     data_set_masses = utils.jet_masses(data_set)
     generated_masses = utils.jet_masses(generated_events)
+
+    print("Device in w_distance is ", device)
 
     w_distances_list = []
     k = 0
@@ -116,10 +139,12 @@ jettype_dict = {
                 "top150": "t"
 }
 
-def evaluation_means(network, data_set, kde, calc_fpnd = True, calc_w_dist_p = True, dataname = None,
-                    batch_size = 128, n_tot_generation = 300000,
+def evaluation_means(network, data_set, kde, calc_fpnd = True, calc_w_dist_p = True,
+                    dataname = None, batch_size = 128, n_tot_generation = 300000,
                     dim_global = 10, dim_particle = 3, rng = None,
-                    set_min_pt = True, min_pt = 0, runs = 10, device = "cuda"):
+                    set_min_pt = True, min_pt = 0, center_gen = True,
+                    inv_normalise_data = True, inv_means = np.zeros(3), inv_stds = np.ones(3),
+                    inv_norm_sigma = 1,  runs = 10, device = "cuda"):
     """Computes the evaluation means assessed besides the Wasserstein distance
     of the masses, meaning the Wasserstein distances between the distributions of
     the particle features in data_set and generated events and the Frechet
@@ -172,6 +197,24 @@ def evaluation_means(network, data_set, kde, calc_fpnd = True, calc_w_dist_p = T
     min_pt: int or float, default: 0
         minimum value to which all p_t below will be set, if set_min_pt is True
 
+    center_gen: bool, default: True
+        if True, the eta- and phi-coordinates of the generated events will be
+        centered
+
+    inv_normalise_data: bool, default: True
+        if True, the generated events will be renormalised to have the statistical
+        properties of the training set
+
+    inv_means: list or np.array, default: np.zeros(3)
+        mean value for each particle feature to which to renormalise the generated events
+
+    inv_stds: list or np.array, default: np.ones(3)
+        standard deviation value for each particle feature to which to renormalise
+        the generated events
+
+    inv_norm_sigma: float or int, default: 1
+        std-value to which the real input data was normalised
+
     runs: int, default: 10
         number of disjoint subsets of generated events that will be used to compute
         the Wasserstein distances, the returned Wasserstein distances will be the
@@ -194,8 +237,17 @@ def evaluation_means(network, data_set, kde, calc_fpnd = True, calc_w_dist_p = T
         of data_set
     """
 
-
     len_data_set, n_points = data_set.shape[0], data_set.shape[1]
+
+    generated_events = generation_loop(network, n_points, kde,
+                    batch_size = batch_size, n_tot_generation = n_tot_generation,
+                    dim_global = dim_global, dim_particle = dim_particle, rng = rng,
+                    inv_normalise_data = inv_normalise_data, inv_means = inv_means,
+                    inv_stds = inv_stds, inv_norm_sigma = inv_norm_sigma, device = device)
+    if set_min_pt:
+        generated_events = data_proc.set_min_pt(generated_events, min_pt)
+    if center_gen:
+        generated_events = utils.center_jets(generated_events)
 
     if not calc_w_dist_p:
         if not calc_fpnd:
@@ -211,35 +263,23 @@ def evaluation_means(network, data_set, kde, calc_fpnd = True, calc_w_dist_p = T
                             compute the FPND as an additional evaluation means""")
             sys.exit()
 
-        generated_events = generation_loop(network, n_points, kde,
-                            batch_size = batch_size, n_tot_generation = int(1.05*len_data_set),
-                            dim_global = dim_global, dim_particle = dim_particle, rng = rng,
-                            device = device)
-        #cut array of generated events to length of data_set
-        generated_events = generated_events[:len_data_set]
         #features need to be in order [eta, phi, p_t] as in original JetNet datasets
         generated_events = generated_events[:,:,[1,2,0]]
-        fpnd = jetnet.evaluation.fpnd(generated_events, jet_type = jettype, use_tqdm = False, device = device)
+        fpnd_list = []
+        k = 0
 
-        return fpnd
-
-
-
-
-    #here calculate for Wasserstein distance between particle features
-    generated_events = generation_loop(network, n_points, kde,
-                        batch_size = batch_size, n_tot_generation = n_tot_generation,
-                        dim_global = dim_global, dim_particle = dim_particle, rng = rng,
-                        device = device)
-
-    #post-process generated events by setting minimum p_t and centering
-    generated_events = data_proc.set_min_pt(generated_events, min_pt)
-    generated_events = utils.center_jets(generated_events)
+        for _ in range(runs):
+            used_events = generated_events[k:int(k + len_data_set)]
+            k += len_data_set
+            fpnd = jetnet.evaluation.fpnd(used_events, jet_type = jettype, use_tqdm = False)
+            fpnd_list.append(fpnd)
+        fpnd_score = np.array(fpnd_list).mean()
+        print("passed")
+        return fpnd_score
 
     #sort particles in p_t within jets
     data_set_sorted = utils.order_array_pt(data_set)
     generated_events_sorted = utils.order_array_pt(generated_events)
-
     #calculate particle features
     data_set_features = [utils.jet_pts(data_set_sorted), utils.jet_etas(data_set_sorted),
                          utils.jet_phis(data_set_sorted)]
@@ -273,32 +313,27 @@ def evaluation_means(network, data_set, kde, calc_fpnd = True, calc_w_dist_p = T
                         compute the FPND as an additional evaluation means""")
         sys.exit()
 
-
-
-
-    generated_events = generation_loop(network, n_points, kde,
-                        batch_size = batch_size, n_tot_generation = n_tot_generation,
-                        dim_global = dim_global, dim_particle = dim_particle, rng = rng,
-                        device = device)
-
-    jettype = jettype_dict[dataname]
-
-    #cut array of generated events to length of data_set
-    generated_events = generated_events[:len_data_set]
     #features need to be in order [eta, phi, p_t] as in original JetNet datasets
     generated_events = generated_events[:,:,[1,2,0]]
-    fpnd_score = jetnet.evaluation.fpnd(generated_events, jet_type = jettype, use_tqdm = False, device = device)
+    fpnd_list = []
+    k = 0
+    print("Device inside evaluation_means is ", device)
+    for _ in range(runs):
+        used_events = generated_events[k:int(k + len_data_set)]
+        k += len_data_set
+        fpnd = jetnet.evaluation.fpnd(used_events, jet_type = jettype, use_tqdm = False)
+        fpnd_list.append(fpnd)
+    fpnd_score = np.array(fpnd_list).mean()
 
     return w_distances_list, fpnd_score
 
 
 
 
-
-
-"No inverse normalisation so far!!!"
 def generation_loop(network, n_points, kde, batch_size = 128, n_tot_generation = 300000,
-                    dim_global = 10, dim_particle = 3, rng = None, device = "cuda"):
+                    dim_global = 10, dim_particle = 3, rng = None, inv_normalise_data = True,
+                    inv_means = np.zeros(3), inv_stds = np.ones(3), inv_norm_sigma = 1,
+                    device = "cuda"):
     """This function generates simulated events mimicking the appearance of the
     JetNet datasets.
     First, a distribution of n_eff, which is the number of particles per jet
@@ -347,6 +382,20 @@ def generation_loop(network, n_points, kde, batch_size = 128, n_tot_generation =
         resampling of kde needs a random number generator, it will default to
         np.random, if None is given
 
+    inv_normalise_data: bool, default: True
+        if True, the generated events will be renormalised to have the statistical
+        properties of the training set
+
+    inv_means: list or np.array, default: np.zeros(3)
+        mean value for each particle feature to which to renormalise the generated events
+
+    inv_stds: list or np.array, default: np.ones(3)
+        standard deviation value for each particle feature to which to renormalise
+        the generated events
+
+    inv_norm_sigma: float or int, default: 1
+        std-value to which the real input data was normalised
+
     device: str, default: "cuda"
         device to which to send variables
 
@@ -365,6 +414,7 @@ def generation_loop(network, n_points, kde, batch_size = 128, n_tot_generation =
     #make sure sampled values are int and in range from 1 to n_points
     sampled_kde = np.rint(sampled_kde)
     sampled_kde = sampled_kde[(sampled_kde >= 1) & (sampled_kde <= n_points)]
+
 
 
     unique_vals, unique_freqs = np.unique(sampled_kde, return_counts = True)
@@ -400,14 +450,18 @@ def generation_loop(network, n_points, kde, batch_size = 128, n_tot_generation =
 
             #zero-padding to reobtain total particle number n_points
             gen_out = np.zeros((gen_out_no_pad.shape[0], n_points, dim_particle))
+
             try:
                 gen_out[:,0:n_eff,:] = gen_out_no_pad
             except IndexError as e:
                 logger.exception(e)
                 logger.critical("""Generator has produced output of unexpected shape
-                                in validation loop; expected %d, but got %d""",
-                                [gen_out_no_pad.shape[0], n_eff, dim_particle], gen_out_no_pad.shape)
+                                in validation loop; expected shape [%d,%d,%d]""",
+                                gen_out_no_pad.shape[0], n_eff, dim_particle)
                 sys.exit()
+
+            if inv_normalise_data:
+                data_proc.inverse_normalise_dataset(gen_out, inv_means, inv_stds, norm_sigma = inv_norm_sigma)
 
             generated_events_list.append(gen_out)
 

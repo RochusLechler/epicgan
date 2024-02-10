@@ -220,6 +220,40 @@ def normalise_dataset(data, means, stds, norm_sigma = 5):
     return data
 
 
+def inverse_normalise_dataset(data, means, stds, norm_sigma = 5):
+    """Normalises the given data to specified mean values standard deviations.
+    Expected shape is [len_data, n_points, n_features]
+
+    Arguments
+    -------------
+
+    data: np.array
+        contains data of expected shape [len_data, n_points, n_features]
+
+    means: list or np.array
+        contains the output mean value for every feature
+
+    stds: list or np.array
+        contains the output standard deviation for every feature
+
+    norm_sigma: int or float, default: 5
+        standard deviation to which all of the input data is normalised
+
+    Returns
+    ----------
+
+    data: np.array
+        contains the dataset normalised to mean means and standard deviation stds.
+    """
+
+    n_features = data.shape[2]
+    for j in range(n_features):
+        data[:,:,j] = data[:,:,j]*(stds[j]/norm_sigma) + means[j]
+
+    return data
+
+
+
 def set_min_pt(dataset, min_pt):
     """Sets all values of 0 < p_t < min_pt within dataset to min_pt
 
