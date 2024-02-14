@@ -79,7 +79,18 @@ def calc_kde(p_dataset, file_path = None):
         gaussian_kde-object
     """
 
+<<<<<<< HEAD
     mults = np.count_nonzero(p_dataset[:,:,0], axis = 1)
+=======
+    try:
+        mults = np.count_nonzero(p_dataset[:,:,0], axis = 1)
+    except IndexError as e:
+        logger.exception(e)
+        logger.critical("""Received dataset of unexpected shape; excpected shape
+                        [total_size, n_points, n_features]""")
+        sys.exit()
+
+>>>>>>> 58a9370 (updated auxiliary functions)
     kde = gaussian_kde(mults)
 
 
@@ -162,7 +173,7 @@ def jet_etas(data):
     """
 
     jets_cartesian = energyflow.p4s_from_ptyphims(data)
-    etas = energyflow.etas_from_p4s(jets_cartesian.sum(axis=1))
+    etas = energyflow.etas_from_p4s(jets_cartesian.sum(axis = 1))
     return etas
 
 
@@ -182,8 +193,54 @@ def jet_phis(data):
         phi for every jet
     """
     jets_cartesian = energyflow.p4s_from_ptyphims(data)
+<<<<<<< HEAD
     phis = energyflow.phis_from_p4s(jets_cartesian.sum(axis=1), phi_ref=0)
+=======
+    phis = energyflow.phis_from_p4s(jets_cartesian.sum(axis = 1), phi_ref = 0)
+>>>>>>> 58a9370 (updated auxiliary functions)
     return phis
+
+def jet_multiplicities(data):
+    """Calculates the particle multiplicities n_eff in data.
+
+    Arguments
+    ------------
+
+    data: np.array
+        data for which to compute multiplicities
+
+    Returns
+    -----------
+
+    mults: np.array
+        particle multiplicities
+    """
+
+    try:
+        mults = np.count_nonzero(data[:,:,0], axis = 1)
+    except IndexError as e:
+        logger.exception(e)
+        logger.critical("""got data of unexpected shape, expected shape is
+                        [n_samples, n_points, n_features]; this function returns
+                        nothing""")
+        return
+
+    return mults
+
+########## got this one from EPiC-GAN Github!  #############
+def torch_p4s_from_ptyphi(ptyphi):
+    """
+    """
+    # get pts, ys, phis
+    #ptyphi = torch.Tensor(ptyphi).float()
+    pts, ys, phis = (ptyphi[...,0,np.newaxis],
+                     ptyphi[...,1,np.newaxis],
+                     ptyphi[...,2,np.newaxis])
+
+    Ets = torch.sqrt(pts**2) #  + ms**2) # everything assumed massless
+    p4s = torch.cat((Ets*torch.cosh(ys), pts*torch.cos(phis),
+                          pts*torch.sin(phis), Ets*torch.sinh(ys)), axis=-1)
+    return p4s
 
 
 
@@ -237,8 +294,17 @@ def order_array_pt(data):
         ordered data
     """
 
+    try:
+        mask = np.argsort(data[:,:,0], axis = -1)
+    except IndexError as e:
+        logger.exception(e)
+        logger.warning("""input data has unexpected shape; expected shape is
+                        [n_samples, n_points, n_features]; this function
+                        returns the input unchanged""")
 
-    mask = np.argsort(data[:,:,0], axis = -1)
+        return data
+
+
     dim_particle = data.shape[2]
     sorted_features_list = []
 
@@ -292,3 +358,65 @@ def save_model(generator, discriminator, optimizer_g, optimizer_d,
                 "optimizer_d_state": optimizer_d.state_dict()
     }
     torch.save(save_dict, path)
+
+
+def load_model(generator, discriminator, optimizer_g, optimizer_d,
+                file_name, folder = "./saved_models", device = "cuda"):
+    """Loads a GAN consisting of generator, discriminator and optimizers
+    for each from a file that was created using the above function save_model
+
+    Arguments
+    ------------
+
+    generator: Generator
+        generator network of the GAN
+
+    discriminator: Discriminator
+        discriminator network of the GAN
+
+    optimizer_g: torch.optim.Optimizer
+        optimizer of the generator network
+
+    optimizer_d: torch.optim.Optimizer
+        optimizer of the discriminator network
+
+    file_name: str
+        filename of the file to load
+
+    folder: str, default: "./saved_models"
+        folder where to search for the file
+
+    Returns
+    ------------
+
+    generator: Generator
+        generator network with the parameters saved in the specified file
+
+    discriminator: Discriminator
+        discriminator network with the parameters saved in the specified file
+
+    optimizer_g: torch.optim.Optimizer
+        optimizer for the generator network with state stored in specified file
+
+    optimizer_d: torch.optim.Optimizer
+        optimizer for the discriminator network with state stored in specified file
+    """
+
+    path = os.path.join(folder, file_name + ".tar")
+    try:
+        model = torch.load(path, map_location = device)
+    except FileNotFoundError as e:
+        logger.exception(e)
+        logger.critical("""could not find the file you want to load, program will
+                        terminate""")
+
+        sys.exit()
+
+    generator.load_state_dict(model['generator_state'], strict = True)
+    discriminator.load_state_dict(model['discriminator_state'], strict = True)
+
+    optimizer_g.load_state_dict(model['optimizer_g_state'])
+    optimizer_d.load_state_dict(model['optimizer_d_state'])
+
+    logger.info("Model for %s loaded", file_name)
+    return generator, discriminator, optimizer_g, optimizer_d

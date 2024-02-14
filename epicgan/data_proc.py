@@ -13,7 +13,7 @@ from epicgan import utils
 
 logger = logging.getLogger("main")
 
-datasets_folder = "/home/rochus/Documents/Studium/semester_pisa/cmepda/exam_project/JetNet_datasets/"
+datasets_folder = "./JetNet_datasets/"
 
 
 

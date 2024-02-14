@@ -93,11 +93,12 @@ class Generator(nn.Module):
         self.g_in_1 = weight_norm(nn.Linear(self.input_size_g, self.hid_size_g_in))
         self.g_in_2 = weight_norm(nn.Linear(self.hid_size_g_in, self.hid_size_g))
 
-        self.epic_layers = []
+        self.epic_layers = nn.ModuleList()
         for _ in range(self.num_epic_layers):
             self.epic_layers.append(EpicGanLayer(hid_size_p = self.hid_size_p,
                                     hid_size_g = self.hid_size_g,
                                     hid_size_g_in = self.hid_size_g_in))
+
 
 
 
@@ -154,7 +155,7 @@ class Discriminator(nn.Module):
         #3rd layer gives scalar output that decides real/fake
         self.g_out_3 = weight_norm(nn.Linear(self.hid_size_p, 1))
 
-        self.epic_layers = []
+        self.epic_layers = nn.ModuleList()
         for _ in range(self.num_epic_layers):
             self.epic_layers.append(EpicGanLayer(hid_size_p = self.hid_size_p,
                                     hid_size_g = self.hid_size_g,

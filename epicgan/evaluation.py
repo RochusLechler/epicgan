@@ -6,7 +6,6 @@ import sys
 import logging
 
 import numpy as np
-import jetnet
 from scipy.stats import wasserstein_distance
 from epicgan import data_proc, utils
 
@@ -18,6 +17,10 @@ logger = logging.getLogger("main")
 def compute_wasserstein_distance(network, data_set, kde, batch_size = 128,
                     n_tot_generation = 300000, dim_global = 10, dim_particle = 3,
                     rng = None, set_min_pt = True, min_pt = 0, center_gen = True,
+<<<<<<< HEAD
+=======
+                    order_by_pt = True,
+>>>>>>> 58a9370 (updated auxiliary functions)
                     inv_normalise_data = True, inv_means = np.zeros(3), inv_stds = np.ones(3),
                     inv_norm_sigma = 1, runs = 10, device = "cuda"):
     """Computes the Wasserstein distance between masses of the jets of the
@@ -64,6 +67,13 @@ def compute_wasserstein_distance(network, data_set, kde, batch_size = 128,
         if True, the eta- and phi-coordinates of the generated events will be
         centered
 
+<<<<<<< HEAD
+=======
+    order_by_pt: bool, default: True
+        if True, the particles within each generated fake jet will be ordered by
+        p_t in descending order
+
+>>>>>>> 58a9370 (updated auxiliary functions)
     inv_normalise_data: bool, default: True
         if True, the generated events will be renormalised to have the statistical
         properties of the training set
@@ -99,6 +109,7 @@ def compute_wasserstein_distance(network, data_set, kde, batch_size = 128,
     generated_events = generation_loop(network, n_points, kde,
                         batch_size = batch_size, n_tot_generation = n_tot_generation,
                         dim_global = dim_global, dim_particle = dim_particle, rng = rng,
+<<<<<<< HEAD
                         inv_normalise_data = inv_normalise_data, inv_means = inv_means,
                         inv_stds = inv_stds, inv_norm_sigma = inv_norm_sigma, device = device)
 
@@ -107,6 +118,16 @@ def compute_wasserstein_distance(network, data_set, kde, batch_size = 128,
         generated_events = data_proc.set_min_pt(generated_events, min_pt)
     if center_gen:
         generated_events = utils.center_jets(generated_events)
+=======
+                        order_by_pt = order_by_pt, set_min_pt = set_min_pt,
+                        min_pt = min_pt, center_gen = center_gen,
+                        inv_normalise_data = inv_normalise_data, inv_means = inv_means,
+                        inv_stds = inv_stds, inv_norm_sigma = inv_norm_sigma, device = device)
+
+    #order also real data
+    if order_by_pt:
+        data_set = utils.order_array_pt(data_set)
+>>>>>>> 58a9370 (updated auxiliary functions)
 
     #get masses of the jets
     data_set_masses = utils.jet_masses(data_set)
@@ -129,6 +150,7 @@ def compute_wasserstein_distance(network, data_set, kde, batch_size = 128,
 
 
 
+<<<<<<< HEAD
 #dictionary that maps names of datasets to values accepted by fpnd-function
 jettype_dict = {
                 "gluon30": "g",
@@ -334,6 +356,15 @@ def generation_loop(network, n_points, kde, batch_size = 128, n_tot_generation =
                     dim_global = 10, dim_particle = 3, rng = None, inv_normalise_data = True,
                     inv_means = np.zeros(3), inv_stds = np.ones(3), inv_norm_sigma = 1,
                     device = "cuda"):
+=======
+
+
+def generation_loop(network, n_points, kde, batch_size = 128, n_tot_generation = 300000,
+                    dim_global = 10, dim_particle = 3, rng = None, order_by_pt = True,
+                    set_min_pt = True, min_pt = 0, center_gen = True,
+                    inv_normalise_data = True, inv_means = np.zeros(3), inv_stds = np.ones(3),
+                    inv_norm_sigma = 1, device = "cuda"):
+>>>>>>> 58a9370 (updated auxiliary functions)
     """This function generates simulated events mimicking the appearance of the
     JetNet datasets.
     First, a distribution of n_eff, which is the number of particles per jet
@@ -350,7 +381,7 @@ def generation_loop(network, n_points, kde, batch_size = 128, n_tot_generation =
     (ca. 27,000 samples) and for each evaluation ten runs of comparisons between
     validation set and generated jets set are done. Therefore ca. 270,000 generated
     samples are required, which is why n_tot_generation defaults to 300,000 (a few
-    samples will be killed by the requirement 1 <= n_eff <= n_points).
+    samples could be killed by the requirement 1 <= n_eff <= n_points).
 
 
     Arguments
@@ -382,6 +413,24 @@ def generation_loop(network, n_points, kde, batch_size = 128, n_tot_generation =
         resampling of kde needs a random number generator, it will default to
         np.random, if None is given
 
+<<<<<<< HEAD
+=======
+    order_by_pt: bool, default: True
+        if True, the particles within each generated fake jet will be ordered by
+        p_t in descending order
+
+    set_min_pt: bool, default: True
+        if True, all generated particles will be enforced to have p_t of at least
+        the value specified in min_pt
+
+    min_pt: int or float, default: 0
+        minimum value to which all p_t below will be set, if set_min_pt is True
+
+    center_gen: bool, default: True
+        if True, the eta- and phi-coordinates of the generated events will be
+        centered
+
+>>>>>>> 58a9370 (updated auxiliary functions)
     inv_normalise_data: bool, default: True
         if True, the generated events will be renormalised to have the statistical
         properties of the training set
@@ -441,12 +490,14 @@ def generation_loop(network, n_points, kde, batch_size = 128, n_tot_generation =
             noise_global, noise_particle = data_proc.get_noise(n_eff, batch_size = current_batch_size,
                                             dim_global = dim_global, dim_particle = dim_particle,
                                             rng = rng, device = device)
-            noise_global.to(device)
-            noise_particle.to(device)
+
             #generating the simulated events
             #pull the result back to cpu, detatched from the network (we are only
             #interested in the resulting events)
             gen_out_no_pad = network(noise_particle, noise_global).detach().cpu().numpy()
+
+            if inv_normalise_data:
+                gen_out_no_pad = data_proc.inverse_normalise_dataset(gen_out_no_pad, inv_means, inv_stds, norm_sigma = inv_norm_sigma)
 
             #zero-padding to reobtain total particle number n_points
             gen_out = np.zeros((gen_out_no_pad.shape[0], n_points, dim_particle))
@@ -460,8 +511,12 @@ def generation_loop(network, n_points, kde, batch_size = 128, n_tot_generation =
                                 gen_out_no_pad.shape[0], n_eff, dim_particle)
                 sys.exit()
 
+<<<<<<< HEAD
             if inv_normalise_data:
                 data_proc.inverse_normalise_dataset(gen_out, inv_means, inv_stds, norm_sigma = inv_norm_sigma)
+=======
+
+>>>>>>> 58a9370 (updated auxiliary functions)
 
             generated_events_list.append(gen_out)
 
@@ -474,5 +529,13 @@ def generation_loop(network, n_points, kde, batch_size = 128, n_tot_generation =
         permutation = rng.permutation(len(generated_events))
         generated_events = generated_events[permutation]
 
+    if set_min_pt:
+        generated_events = data_proc.set_min_pt(generated_events, min_pt)
+
+    if order_by_pt:
+        generated_events = utils.order_array_pt(generated_events)
+
+    if center_gen:
+        generated_events = utils.center_jets(generated_events)
 
     return generated_events
