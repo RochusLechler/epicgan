@@ -91,8 +91,6 @@ def evaluate_performance(dataset_name, n_points, make_plots = True):
                                         betas = (beta_1, 0.999), eps = 1e-14)
 
 
-
-
     generator, discriminator, optimizer_g, optimizer_d = utils.load_model(generator, discriminator, optimizer_g, optimizer_d, file_name = dataset_name, device = device)
 
     generator.eval()
@@ -123,9 +121,7 @@ def evaluate_performance(dataset_name, n_points, make_plots = True):
     if center_gen:
         generated_events = utils.center_jets(generated_events)
 
-
     len_test_set = len(test_set)
-
 
     w_mass_mean, w_mass_std = performance_metrics.wasserstein_mass(test_set,
                                 generated_events, num_samples = len_test_set, num_batches = 10,

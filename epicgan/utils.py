@@ -79,9 +79,7 @@ def calc_kde(p_dataset, file_path = None):
         gaussian_kde-object
     """
 
-<<<<<<< HEAD
-    mults = np.count_nonzero(p_dataset[:,:,0], axis = 1)
-=======
+
     try:
         mults = np.count_nonzero(p_dataset[:,:,0], axis = 1)
     except IndexError as e:
@@ -90,7 +88,6 @@ def calc_kde(p_dataset, file_path = None):
                         [total_size, n_points, n_features]""")
         sys.exit()
 
->>>>>>> 58a9370 (updated auxiliary functions)
     kde = gaussian_kde(mults)
 
 
@@ -192,12 +189,10 @@ def jet_phis(data):
     phis: np.array
         phi for every jet
     """
+
     jets_cartesian = energyflow.p4s_from_ptyphims(data)
-<<<<<<< HEAD
-    phis = energyflow.phis_from_p4s(jets_cartesian.sum(axis=1), phi_ref=0)
-=======
     phis = energyflow.phis_from_p4s(jets_cartesian.sum(axis = 1), phi_ref = 0)
->>>>>>> 58a9370 (updated auxiliary functions)
+
     return phis
 
 def jet_multiplicities(data):
