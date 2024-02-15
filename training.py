@@ -207,14 +207,6 @@ class TrainableModel:
         self.loss_gen = 0
         self.loss_dis = 0
 
-
-network, data_set, kde, batch_size = 128,
-                    n_tot_generation = 300000, dim_global = 10, dim_particle = 3,
-                    rng = None, set_min_pt = True, min_pt = 0, center_gen = True,
-                    order_by_pt = True,
-                    inv_normalise_data = True, inv_means = np.zeros(3), inv_stds = np.ones(3),
-                    inv_norm_sigma = 1, runs = 10, device = "cuda"):
-
         w_distance = evaluation.compute_wasserstein_distance(self.generator, self.val_set, self.kde,
                         batch_size = batch_size, n_tot_generation = n_tot_generation,
                         dim_global = dim_global, dim_particle = dim_particle,
@@ -243,7 +235,7 @@ network, data_set, kde, batch_size = 128,
                             file_name = self.dataset_name)
 
             self.logger.info("first epoch done, model saved")
-            self.logger.info("Wasserstein distance is %.2f", self.test_w_distance)
+            self.logger.info("Wasserstein distance is %.5f", self.test_w_distance)
 
         else: #from second epoch on, do this
             if w_distance < self.best_w_dist: # -> better model found
@@ -294,9 +286,9 @@ network, data_set, kde, batch_size = 128,
         discr_out_fake = self.discriminator(gen_out)
 
         #loss is the least-squares-GAN loss
-        discr_loss = 0.5 * (torch.mean((discr_out_real - self.real_label)**2) + torch.mean((discr_out_fake - self.fake_label)**2))
+        discr_loss = 0.5 * (torch.mean(torch.square(discr_out_real - self.real_label)) + torch.mean(torch.square(discr_out_fake - self.fake_label)))
 
-        self.loss_dis += discr_loss
+        self.loss_dis += discr_loss.item()
 
         #compute gradients, perform update
         discr_loss.backward()
@@ -325,7 +317,7 @@ network, data_set, kde, batch_size = 128,
         #loss: real_label, because generator wants to fool discriminator
         gen_loss = 0.5 * torch.mean((discr_out - self.real_label)**2)
 
-        self.loss_gen += gen_loss
+        self.loss_gen += gen_loss.item()
         #gradient and update
         gen_loss.backward()
         self.optimizer_G.step()
