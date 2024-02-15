@@ -116,10 +116,6 @@ def evaluate_performance(dataset_name, n_points, make_plots = True):
         #is performed in generation_loop for fake samples
         test_set = utils.order_array_pt(test_set)
 
-    if set_min_pt:
-        generated_events = data_proc.set_min_pt(generated_events, train_set_mins[0])
-    if center_gen:
-        generated_events = utils.center_jets(generated_events)
 
     len_test_set = len(test_set)
 
