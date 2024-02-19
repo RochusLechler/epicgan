@@ -1,7 +1,12 @@
-"""This script evaluates the performance of a given network.
+"""This script defines a function that evaluates performance of a trained network.
+Make sure that the hard-coded parameters that define the network architecture match
+the model you want to load.
+Due to the sheer amount of variables the ones that are usually not changed are
+hard-coded above the function definition. They can be changed there.
 """
 
 import os
+import sys
 import logging
 
 import numpy as np
@@ -13,16 +18,13 @@ from epicgan import utils, data_proc, models, evaluation, performance_metrics
 
 
 
-#default values
+#hard-coded parameters
 
-#which dataset to use out of gluon30, quark30, top30, gluon150, quark150, top150
-#dataset_name = "quark30"
-#the number of points (particles) per jet; either 30 or 150
-#n_points     = 30
+
 #learning rate of the generator
-lr_G         = 1e-14
+lr_G         = 1e-4
 #learning rate of the discriminator
-lr_D         = 1e-14
+lr_D         = 1e-4
 #beta_1 parameter of the Adam optimizers
 beta_1       = 0.9
 #batch size used in training
@@ -45,8 +47,6 @@ n_tot_generation = 300000
 #number of comparison runs for each Wasserstein validation step
 #make sure runs is <= the number of times the length of validation/test sets fit into n_tot_generation
 runs         = 10
-#number of epochs to be performed
-num_epochs   = 20
 #whether to set p_t coordinates of generated events to specified minimum value
 set_min_pt   = True
 #whether to normalise generated events to mean & std of training set
@@ -57,25 +57,48 @@ order_by_pt = True
 center_gen   = True
 
 
-def evaluate_performance(dataset_name, n_points, make_plots = True):
-    """
+def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, save_file_name = None):
+    """Function that evaluates a trained network. Has an option to make the plots
+    that are in the original EPiC-GAN paper and save them to a .png-file
+    When running the evaluation, ensure the place from where you run the training
+    has the following folders and contents:
+    1. There is a folder 'saved_models' wher the model you want to load is stored
+    2. There is a folder 'logbooks', the logfile will be stored here
+
+    Arguments:
+    -----------
+
+    dataset_name:
+        specifies the dataset; needed to obtain the test set
+
+    model_name: str
+        model specification; must exist in folder 'saved_models'; will also be
+        added to the logfile-name
+
+    n_points: int
+        number of particles per jet, either 30 or 150
+
+    make_plots: bool, default: True
+        if True, the plots that are in the original EPiC-GAN paper will be made
+
+    save_file_name: str, default: None
+        filename of the plots that will be saved, if make_plots is True;
+        if None, plots will not be saved
     """
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     log_folder = "./logbooks"
-    if suffix is None:
-        suffix = "main"
     try:
-        logfile_name = "logbook_evaluation_" + suffix + ".log"
-    except TypeError as e:
-        print(e)
-        print("the suffix given for naming the evaluation run must be a string")
+        logfile_name = "logbook_evaluation_" + model_name + ".log"
+    except TypeError:
+        print("model_name must be a string")
+        sys.exit()
 
     logging.basicConfig(format = '%(asctime)s[%(levelname)s] %(funcName)s: %(message)s',
                               datefmt = '%d/%m/%Y %I:%M:%S %p',
                               filename = os.path.join(log_folder, logfile_name),
-                              level = logging.DEBUG,
+                              level = logging.INFO,
                               filemode = 'w')
 
     logger = logging.getLogger("main")
@@ -96,8 +119,11 @@ def evaluate_performance(dataset_name, n_points, make_plots = True):
     optimizer_d = torch.optim.Adam(discriminator.parameters(), lr = lr_D,
                                         betas = (beta_1, 0.999), eps = 1e-14)
 
-
-    generator, discriminator, optimizer_g, optimizer_d = utils.load_model(generator, discriminator, optimizer_g, optimizer_d, file_name = dataset_name, device = device)
+    try:
+        generator, discriminator, optimizer_g, optimizer_d = utils.load_model(generator, discriminator, optimizer_g, optimizer_d, file_name = model_name, device = device)
+    except FileNotFoundError as e:
+        logger.exception(e)
+        logger.critical("could not find a file named %s in saved_models", model_name)
 
     generator.eval()
     discriminator.eval()
@@ -105,7 +131,7 @@ def evaluate_performance(dataset_name, n_points, make_plots = True):
 
     #get the dataset
     dataset = data_proc.get_dataset(dataset_name)
-    train_set, val_set, test_set = data_proc.split_dataset(dataset, rng = rng)
+    train_set, _, test_set = data_proc.split_dataset(dataset, rng = rng)
 
     kde = data_proc.get_kde(dataset_name)
     train_set_means, train_set_stds, train_set_mins, train_set_maxs = data_proc.dataset_properties(train_set)
@@ -165,8 +191,18 @@ def evaluate_performance(dataset_name, n_points, make_plots = True):
     #    result_dict["fpnd_std"]  = fpnd_std
 
     if make_plots:
+        save_folder = "./save_folder"
+
         fig = plot_overview(generator, n_points, test_set, dataset_name,
-                            generated_events = generated_events, logger = logger)
+                            generated_events)
+
+        try:
+            plt.savefig(os.path.join(save_folder, save_file_name + ".png"))
+        except TypeError as e:
+            logger.exception(e)
+            logger.warning("""please specify a string on where to save the plots,
+                            if you want to save them; figure will be returned,
+                            but not saved""")
 
         return result_dict, fig
 
@@ -178,13 +214,86 @@ def evaluate_performance(dataset_name, n_points, make_plots = True):
 
 
 ##############  got this one from EPiC-Gan Github  #################
-def plot_overview(generator, n_points, test_set, dataset_name, generated_events = None,
+def plot_overview(test_set, dataset_name, generated_events = None, generator = None, n_points = None,
                     kde = None, batch_size = 128, n_tot_generation = 300000,
                     dim_global = 10, dim_particle = 3, rng = None, order_by_pt = True,
                     set_min_pt = True, min_pt = 0, center_gen = True,
                     inv_normalise_data = True, inv_means = np.zeros(3), inv_stds = np.ones(3),
                     inv_norm_sigma = 1, device = "cuda"):
-    """
+    """Function makes the plots that are given in the original EPiC-GAN paper.
+
+    Arguments
+    -------------
+
+    test_set: np.array
+        set of samples from original dataset to use for evaluation
+
+    datset_name: str
+        name used in labels of plots;
+
+    generated_events: np.array, default: None
+        generated events to use for evaluation; IF SPECIFIED, ALL OF THE FOLLOWING
+        ARGUMENTS ARE REDUNDANT
+
+    generator: Generator
+        generator network with which to perform the event generation; needs to be specified
+        when generated_events is None
+
+    n_points: int
+        number of particles per jet, 30 or 150; needs to be specified when
+        generated_events is None
+
+    kde: scipy.stats.gaussian_kde
+        kernel density estimation of n_eff for the dataset
+
+    batch_size: int, default: 128
+        batch size to be created by generator
+
+    n_tot_generation: int, default: 300000
+        number of points that will be sampled from kde
+
+    dim_global: int, default: 10
+        dimension of the space of global variables in the network
+
+    dim_particle: int, default: 3
+        dimension of the space of particle features
+
+    rng: np.random.Generator, default: None
+        random number generator used for kde-resampling; please note that
+        resampling of kde needs a random number generator, it will default to
+        np.random, if None is given
+
+    order_by_pt: bool, default: True
+        if True, the particles within each generated fake jet will be ordered by
+        p_t in descending order
+
+    set_min_pt: bool, default: True
+        if True, all generated particles will be enforced to have p_t of at least
+        the value specified in min_pt
+
+    min_pt: int or float, default: 0
+        minimum value to which all p_t below will be set, if set_min_pt is True
+
+    center_gen: bool, default: True
+        if True, the eta- and phi-coordinates of the generated events will be
+        centered
+
+    inv_normalise_data: bool, default: True
+        if True, the generated events will be renormalised to have the statistical
+        properties of the training set
+
+    inv_means: list or np.array, default: np.zeros(3)
+        mean value for each particle feature to which to renormalise the generated events
+
+    inv_stds: list or np.array, default: np.ones(3)
+        standard deviation value for each particle feature to which to renormalise
+        the generated events
+
+    inv_norm_sigma: float or int, default: 1
+        std-value to which the real input data was normalised
+
+    device: str, default: "cuda"
+        device to which to send variables
     """
 
     logger = logging.getLogger("main")

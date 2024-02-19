@@ -1,6 +1,6 @@
-"""This script performs the training of a model to be specified.
-Due to the sheer amount of variables it defines global variables in order to
-make the function calls more concise.
+"""The class defined here performs the training of a model to be specified.
+Due to the sheer amount of variables the ones that are usually not changed are
+hard-coded above the class definition. They can be changed there.
 """
 
 import os
@@ -17,20 +17,14 @@ from epicgan import utils, data_proc, models, evaluation
 
 
 
-#default values
+#hard-coded parameters
 
-#which dataset to use out of gluon30, quark30, top30, gluon150, quark150, top150
-#dataset_name = "top30"
-#the number of points (particles) per jet; either 30 or 150
-#n_points     = 30
 #learning rate of the generator
-lr_G         = 1e-14
+lr_G         = 1e-4
 #learning rate of the discriminator
-lr_D         = 1e-14
+lr_D         = 1e-4
 #beta_1 parameter of the Adam optimizers
 beta_1       = 0.9
-#batch size used in training
-#batch_size   = 128
 #dimension of the particle space; default 3 are p_t, eta, phi
 dim_particle = 3
 #dimension of the global variable space within the networks
@@ -45,13 +39,10 @@ rng          = np.random.default_rng(3)
 norm_sigma   = 5
 #total number of events generated for each evaluation assessment
 n_tot_generation = 300000
-#n_tot_generation = 3000 #just for now
 #number of comparison runs for each Wasserstein validation step
-#make sure runs is <= the number of times the length of validation/test sets fit into n_tot_generation
+#make sure runs is <= n_tot_generation divided by the length of validation and test set
 runs = 10
-#number of epochs to be performed
-num_epochs   = 20
-#whether to set p_t coordinates of generated events to specified minimum value
+#whether to set p_t coordinates of generated events to minimum value found in training set
 set_min_pt   = True
 #whether to normalise generated events to mean & std of training set
 inv_normalise_data = True
@@ -67,9 +58,14 @@ center_gen   = True
 class TrainableModel:
     """A class incorporating the GAN model. It has a member function that
     performs the training.
+    When running the training, ensure the place from where you run the training
+    has the following folders and contents:
+    1. The dataset is stored in folder 'JetNet_datasets' in '.hdf5'-format
+    2. There is a folder 'saved_models', the best model will be stored here
+    3. There is a folder 'logbooks', the logfile will be stored here
     """
 
-    def __init__(self, dataset_name, n_points, batch_size = 128, suffix = None, load = False):
+    def __init__(self, dataset_name, n_points, batch_size = 128, file_suffix = None, load = False, load_file_name = None):
         """Class constructor
 
         Arguments
@@ -80,15 +76,33 @@ class TrainableModel:
         n_points: int
             number of particles per jet, either 30 or 150
 
-        suffix: str, default: "main"
-            suffix added to the logfile name; if None, defaults to "main"
+        batch_size: int, default: 128
+            batch size used for the training
+
+        file_suffix: str, default: None
+            suffix added to the logfile name and the filename of the model that
+            will be saved; if None, defaults to "main"
 
         load : bool, default: False
             if True, tries to initialise the model by loading a model according
             to dataset_name
+
+        load_file_name: str, default: None
+            file name from which to load the model; needs to be specified whenever
+            load is set to True
         """
 
         self.dataset_name = dataset_name
+
+        if file_suffix is None:
+            file_suffix = "main"
+
+        try:
+            self.file_name_suffix = self.dataset_name + file_suffix
+        except TypeError:
+            print("file_suffix should be a string")
+            sys.exit()
+
         self.n_points = n_points
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -148,15 +162,12 @@ class TrainableModel:
         #lists track the mean loss per batch for every epoch
         self.mean_loss_gen_list = []
         self.mean_loss_dis_list = []
+        #tracks the Wasserstein distance on the validation set for every epoch
+        self.w_dist_list = []
 
         log_folder = "./logbooks"
-        if suffix is None:
-            suffix = "main"
-        try:
-            logfile_name = "logbook_training_" + suffix + ".log"
-        except TypeError as e:
-            print(e)
-            print("the suffix given for naming the training run must be a string")
+
+        logfile_name = "logbook_training_" + self.file_name_suffix + ".log"
 
         logging.basicConfig(format = '%(asctime)s[%(levelname)s] %(funcName)s: %(message)s',
                                   datefmt = '%d/%m/%Y %I:%M:%S %p',
@@ -172,7 +183,7 @@ class TrainableModel:
                                                                                                     self.discriminator,
                                                                                                     self.optimizer_g,
                                                                                                     self.optimizer_d,
-                                                                                                    file_name = self.dataset_name,
+                                                                                                    file_name = load_file_name,
                                                                                                     device = self.device)
             except FileNotFoundError as e:
                 self.logger.exception(e)
@@ -185,10 +196,41 @@ class TrainableModel:
         self.logger.info("Training will take %d iterations per epoch", self.num_iter_per_ep)
 
 
-    def training(self, loss = "BCE"):
+    def training(self, num_epochs, loss = "BCE"):
         """This function performs the actual training of the specified model.
         As optimizers for both generator and discriminator Adam is used.
+
+        Arguments
+        -----------
+
+        num_epochs: int
+            number of epochs for which to run training
+
+        loss: str, default: "BCE"
+            whether to use binary cross entropy ("BCE") or least-squares-GAN loss
+            ("LS-GAN") for training; defaults to "BCE"
+
+
+        Returns
+        -----------
+
+        self.test_w_distance: float
+            Wasserstein distance score on the test set for the best epoch
+
+        self.best_epoch: int
+            epoch for which the Wasserstein score on the validation set was lowest
+
+        self.mean_loss_dis_list: list
+            list of all the average loss values of the discriminator training
+
+        self.mean_loss_gen_list: list
+            list of all the average loss values of the generator training
+
+        self.w_dist_list: list
+            list of all the Wasserstein distance scores on the validation set
+
         """
+        self.logger.info("loss is %s", loss)
 
         #start the training loop
         start = time.time()
@@ -205,6 +247,11 @@ class TrainableModel:
             #validation loop
             if iteration_counter % self.num_iter_per_ep == 0:
                 self.logger.info("Epoch %d done", int(self.epoch_counter + 1))
+
+                self.loss_dis /= self.num_iter_per_ep
+                self.loss_gen /= self.num_iter_per_ep
+                self.mean_loss_dis_list.append(self.loss_dis)
+                self.mean_loss_gen_list.append(self.loss_gen)
                 self.logger.info("losses: Discriminator: %.3f; Generator: %.3f", self.loss_dis, self.loss_gen)
                 self.loss_dis = 0
                 self.loss_gen = 0
@@ -237,7 +284,7 @@ class TrainableModel:
         mins, secs  = divmod(rest, 60)
         self.logger.info("In total the training took %d h %d min %d sec", hours, mins, secs)
 
-        return self.test_w_distance, self.best_epoch
+        return self.test_w_distance, self.best_epoch, self.mean_loss_dis_list, self.mean_loss_gen_list, self.w_dist_list
 
 
 
@@ -275,13 +322,13 @@ class TrainableModel:
                             inv_normalise_data = inv_normalise_data,
                             inv_means = self.train_set_means, inv_stds = self.train_set_stds,
                             inv_norm_sigma = norm_sigma, runs = runs, device = self.device)
-
+            self.w_dist_list.append(self.test_w_distance)
 
             utils.save_model(self.generator, self.discriminator, self.optimizer_g, self.optimizer_d,
-                            file_name = self.dataset_name)
+                            file_name = self.file_name_suffix)
 
             self.logger.info("first epoch done, model saved")
-            self.logger.info("Wasserstein distance is %.5f", self.test_w_distance)
+            self.logger.info("Its Wasserstein distance on the test set is %.5f", self.test_w_distance)
 
         else: #from second epoch on, do this
             if w_distance < self.best_w_dist: # -> better model found
@@ -296,11 +343,11 @@ class TrainableModel:
                                 inv_normalise_data = inv_normalise_data,
                                 inv_means = self.train_set_means, inv_stds = self.train_set_stds,
                                 inv_norm_sigma = norm_sigma, runs = runs, device = self.device)
-
+                self.w_dist_list.append(self.test_w_distance)
 
 
                 utils.save_model(self.generator, self.discriminator, self.optimizer_g, self.optimizer_d,
-                                file_name = self.dataset_name)
+                                file_name = self.file_name_suffix)
 
                 self.logger.info("Better model found and saved after epoch %i", int(self.epoch_counter+1))
                 self.logger.info("Its Wasserstein distance on the test set is %.5f", self.test_w_distance)
@@ -308,8 +355,23 @@ class TrainableModel:
 
 
 
-    def discriminator_training(self, data, local_batch_size, loss):
+    def discriminator_training(self, data, local_batch_size, loss = "BCE"):
         """This function performs the discriminator training
+
+        Arguments
+        ------------
+
+        data: torch.Tensor
+            data batch of size local_batch_size to use for training step
+
+        local_batch_size: int
+            number of samples in data, equals self.batch_size most of the time,
+            but can be smaller when number of samples for every effective particle
+            multiplicity is not divisible by self.batch_size
+
+        loss: str, default: "BCE"
+            defines which loss to use, either binary cross entropy ("BCE") or
+            least-squares-GAN loss ("LS-GAN")
         """
 
         self.discriminator.train()
@@ -354,8 +416,21 @@ class TrainableModel:
         self.optimizer_d.step()
 
 
-    def generator_training(self, local_batch_size, loss):
+    def generator_training(self, local_batch_size, loss = "BCE"):
         """This function performs the generator training
+
+        Arguments
+        -------------
+
+        local_batch_size: int
+            number of samples in data used for discriminator training, equals
+            self.batch_size most of the time, but can be smaller when number of
+            samples for every effective particle multiplicity is not divisible
+            by self.batch_size
+
+        loss: str, default: "BCE"
+            defines which loss to use, either binary cross entropy ("BCE") or
+            least-squares-GAN loss ("LS-GAN")
         """
 
         self.discriminator.eval()
