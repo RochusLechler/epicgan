@@ -64,7 +64,13 @@ def evaluate_performance(dataset_name, n_points, make_plots = True):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     log_folder = "./logbooks"
-    logfile_name = "logbook_evaluation_" + dataset_name + ".log"
+    if suffix is None:
+        suffix = "main"
+    try:
+        logfile_name = "logbook_evaluation_" + suffix + ".log"
+    except TypeError as e:
+        print(e)
+        print("the suffix given for naming the evaluation run must be a string")
 
     logging.basicConfig(format = '%(asctime)s[%(levelname)s] %(funcName)s: %(message)s',
                               datefmt = '%d/%m/%Y %I:%M:%S %p',
@@ -113,7 +119,7 @@ def evaluate_performance(dataset_name, n_points, make_plots = True):
                         inv_stds = train_set_stds, inv_norm_sigma = norm_sigma, device = device)
 
     if order_by_pt:
-        #is performed in generation_loop for fake samples
+        #is performed already in generation_loop for fake samples
         test_set = utils.order_array_pt(test_set)
 
 
@@ -132,9 +138,9 @@ def evaluate_performance(dataset_name, n_points, make_plots = True):
                     generated_events, num_samples = len_test_set, num_batches = 10,
                     avg_over_efps = True, return_std = True, rng = rng)
 
-    if n_points == 30:
-        fpnd_mean, fpnd_std = performance_metrics.fpnd_score(generated_events, dataname = dataset_name,
-                            num_samples = len_test_set, num_batches = 3, return_std = True)
+    #if n_points == 30:
+    #    fpnd_mean, fpnd_std = performance_metrics.fpnd_score(generated_events, dataname = dataset_name,
+    #                        num_samples = len_test_set, num_batches = 3, return_std = True)
 
     logger.info("Evaluation done")
 
@@ -143,8 +149,8 @@ def evaluate_performance(dataset_name, n_points, make_plots = True):
                    W_efp: %.5f; std %.5f\n
                 """, w_mass_mean, w_mass_std, w_coords_mean, w_coords_std, w_efp_mean, w_efp_std)
 
-    if n_points == 30:
-        logger.info("FPND: %.5f; std %.5f", fpnd_mean, fpnd_std)
+    #if n_points == 30:
+    #    logger.info("FPND: %.5f; std %.5f", fpnd_mean, fpnd_std)
 
     result_dict = {}
     result_dict["w_mass_mean"] = w_mass_mean
@@ -154,9 +160,9 @@ def evaluate_performance(dataset_name, n_points, make_plots = True):
     result_dict["w_efp_mean"] = w_efp_mean
     result_dict["w_efp_std"]  = w_efp_std
 
-    if n_points == 30:
-        result_dict["fpnd_mean"] = fpnd_mean
-        result_dict["fpnd_std"]  = fpnd_std
+    #if n_points == 30:
+    #    result_dict["fpnd_mean"] = fpnd_mean
+    #    result_dict["fpnd_std"]  = fpnd_std
 
     if make_plots:
         fig = plot_overview(generator, n_points, test_set, dataset_name,
@@ -177,18 +183,17 @@ def plot_overview(generator, n_points, test_set, dataset_name, generated_events 
                     dim_global = 10, dim_particle = 3, rng = None, order_by_pt = True,
                     set_min_pt = True, min_pt = 0, center_gen = True,
                     inv_normalise_data = True, inv_means = np.zeros(3), inv_stds = np.ones(3),
-                    inv_norm_sigma = 1, device = "cuda", logger = None):
+                    inv_norm_sigma = 1, device = "cuda"):
     """
     """
 
+    logger = logging.getLogger("main")
+
     if generated_events is None:
         if kde is None:
-            if logger is not None:
-                logger.warning("""if you do not specify a set of generated events,
+            logger.warning("""if you do not specify a set of generated events,
                                please specify a kde for the generation; this function
                                will return None""")
-            else:
-                print("plot_overview got neither generated_events nor kde for generation, returns None")
             return None
 
         gen_ary = evaluation.generation_loop(generator, n_points, kde, batch_size = batch_size, n_tot_generation = n_tot_generation,
