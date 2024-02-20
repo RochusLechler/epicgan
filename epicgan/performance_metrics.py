@@ -66,6 +66,11 @@ def wasserstein_mass(real_jets, fake_jets, num_samples = 10000, num_batches = 5,
     masses_real = jetnet.utils.jet_features(real_jets)["mass"]
     masses_fake = jetnet.utils.jet_features(fake_jets)["mass"]
 
+    if masses_real.ndim == 0:
+        masses_real = np.array([masses_real])
+    if masses_fake.ndim == 0:
+        masses_fake = np.array([masses_fake])
+
     wasserstein_dist_list = []
 
     k = 0

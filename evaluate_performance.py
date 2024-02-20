@@ -193,8 +193,7 @@ def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, 
     if make_plots:
         save_folder = "./save_folder"
 
-        fig = plot_overview(generator, n_points, test_set, dataset_name,
-                            generated_events)
+        fig = plot_overview(test_set, dataset_name, generated_events)
 
         try:
             plt.savefig(os.path.join(save_folder, save_file_name + ".png"))

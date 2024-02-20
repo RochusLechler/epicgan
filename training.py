@@ -10,8 +10,9 @@ import time
 import tqdm
 
 import numpy as np
+from scipy.stats import wasserstein_distance
 import torch
-from epicgan import utils, data_proc, models, evaluation
+from epicgan import utils, data_proc, models, evaluation, performance_metrics
 
 
 
@@ -65,7 +66,7 @@ class TrainableModel:
     3. There is a folder 'logbooks', the logfile will be stored here
     """
 
-    def __init__(self, dataset_name, n_points, batch_size = 128, file_suffix = None, load = False, load_file_name = None):
+    def __init__(self, dataset_name, n_points, batch_size = 128, file_suffix = None, load = False, load_file_name = None, w_dist_per_iter = False):
         """Class constructor
 
         Arguments
@@ -90,6 +91,11 @@ class TrainableModel:
         load_file_name: str, default: None
             file name from which to load the model; needs to be specified whenever
             load is set to True
+
+        w_dist_per_iter: bool, default: False
+            if True, the dictionary returned contains a list of the Wasserstein distance 
+            between true data and generated events for every iteration (computed in the
+            discriminator training step)
         """
 
         self.dataset_name = dataset_name
@@ -107,6 +113,8 @@ class TrainableModel:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         self.batch_size = batch_size
+        self.w_dist_per_iter = w_dist_per_iter
+
         self.real_label = 1.
         self.fake_label = 0.
         #load the dataset
@@ -164,6 +172,9 @@ class TrainableModel:
         self.mean_loss_dis_list = []
         #tracks the Wasserstein distance on the validation set for every epoch
         self.w_dist_list = []
+        if self.w_dist_per_iter:
+            self.w_dist_per_iter_list = []
+            
 
         log_folder = "./logbooks"
 
@@ -198,7 +209,9 @@ class TrainableModel:
 
     def training(self, num_epochs, loss = "BCE"):
         """This function performs the actual training of the specified model.
-        As optimizers for both generator and discriminator Adam is used.
+        As optimizers for both generator and discriminator Adam is used. The 
+        returns are contained in a dictionary with the results specified here
+        being the keys.
 
         Arguments
         -----------
@@ -214,19 +227,19 @@ class TrainableModel:
         Returns
         -----------
 
-        self.test_w_distance: float
+        best_w_distance: float
             Wasserstein distance score on the test set for the best epoch
 
-        self.best_epoch: int
+        best_epoch: int
             epoch for which the Wasserstein score on the validation set was lowest
 
-        self.mean_loss_dis_list: list
+        mean_loss_dis_list: list
             list of all the average loss values of the discriminator training
 
-        self.mean_loss_gen_list: list
+        mean_loss_gen_list: list
             list of all the average loss values of the generator training
 
-        self.w_dist_list: list
+        w_dist_list: list
             list of all the Wasserstein distance scores on the validation set
 
         """
@@ -284,7 +297,17 @@ class TrainableModel:
         mins, secs  = divmod(rest, 60)
         self.logger.info("In total the training took %d h %d min %d sec", hours, mins, secs)
 
-        return self.test_w_distance, self.best_epoch, self.mean_loss_dis_list, self.mean_loss_gen_list, self.w_dist_list
+        results = {}
+        results["best_w_distance"]    = self.test_w_distance
+        results["best_epoch"]         = self.best_epoch
+        results["mean_loss_dis_list"] = self.mean_loss_dis_list
+        results["mean_loss_gen_list"] = self.mean_loss_gen_list
+        results["w_dist_list"]        = self.w_dist_list 
+
+        if self.w_dist_per_iter:
+            results["w_dist_per_iter"] = self.w_dist_per_iter_list   
+
+        return results
 
 
 
@@ -292,11 +315,6 @@ class TrainableModel:
     def validation_loop(self):
         """Performs a single validation loop
         """
-
-        self.mean_loss_gen_list.append(self.loss_gen/self.num_iter_per_ep)
-        self.mean_loss_dis_list.append(self.loss_dis/self.num_iter_per_ep)
-        self.loss_gen = 0
-        self.loss_dis = 0
 
         w_distance = evaluation.compute_wasserstein_distance(self.generator, self.val_set, self.kde,
                         batch_size = self.batch_size, n_tot_generation = n_tot_generation,
@@ -414,6 +432,18 @@ class TrainableModel:
         #compute gradients, perform update
         discr_loss.backward()
         self.optimizer_d.step()
+
+        if self.w_dist_per_iter:
+            data = data.detach().cpu().numpy()
+            gen_out = gen_out.detach().cpu().numpy()
+
+            if order_by_pt:
+                data = utils.order_array_pt(data)
+                gen_out = utils.order_array_pt(gen_out)
+
+            w_dist = performance_metrics.wasserstein_mass(data, gen_out, num_samples = data.shape[0], num_batches = 1,
+                return_std = False, rng = rng)
+            self.w_dist_per_iter_list.append(w_dist)
 
 
     def generator_training(self, local_batch_size, loss = "BCE"):
