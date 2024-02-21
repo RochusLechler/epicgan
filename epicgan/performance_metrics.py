@@ -7,6 +7,7 @@ import numpy as np
 from scipy.stats import wasserstein_distance
 import jetnet
 
+from epicgan import utils
 
 logger = logging.getLogger("main")
 
@@ -60,12 +61,17 @@ def wasserstein_mass(real_jets, fake_jets, num_samples = 10000, num_batches = 5,
         fake_jets = fake_jets[permutation2]
 
     #features need to be in order [eta, phi, p_t]
-    real_jets = real_jets[:,:,[1,2,0]]
-    fake_jets = fake_jets[:,:,[1,2,0]]
+    #real_jets = real_jets[:,:,[1,2,0]]
+    #fake_jets = fake_jets[:,:,[1,2,0]]
 
-    masses_real = jetnet.utils.jet_features(real_jets)["mass"]
-    masses_fake = jetnet.utils.jet_features(fake_jets)["mass"]
+    #get masses of the jets
+    masses_real = utils.jet_masses(real_jets)
+    masses_fake = utils.jet_masses(fake_jets)
 
+    #masses_real = jetnet.utils.jet_features(real_jets)["mass"]
+    #masses_fake = jetnet.utils.jet_features(fake_jets)["mass"]
+
+    #ensure that masses are stored array-like
     if masses_real.ndim == 0:
         masses_real = np.array([masses_real])
     if masses_fake.ndim == 0:

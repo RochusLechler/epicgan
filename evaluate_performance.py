@@ -73,7 +73,7 @@ def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, 
 
     model_name: str
         model specification; must exist in folder 'saved_models'; will also be
-        added to the logfile-name
+        added as suffix to the logfile-name
 
     n_points: int
         number of particles per jet, either 30 or 150
@@ -124,6 +124,8 @@ def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, 
     except FileNotFoundError as e:
         logger.exception(e)
         logger.critical("could not find a file named %s in saved_models", model_name)
+
+        sys.exit()
 
     generator.eval()
     discriminator.eval()
@@ -191,7 +193,7 @@ def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, 
     #    result_dict["fpnd_std"]  = fpnd_std
 
     if make_plots:
-        save_folder = "./save_folder"
+        save_folder = "save_models"
 
         fig = plot_overview(test_set, dataset_name, generated_events)
 
@@ -212,7 +214,7 @@ def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, 
 
 
 
-##############  got this one from EPiC-Gan Github  #################
+##############  got the code for the plots in this one from EPiC-GAN Github  #################
 def plot_overview(test_set, dataset_name, generated_events = None, generator = None, n_points = None,
                     kde = None, batch_size = 128, n_tot_generation = 300000,
                     dim_global = 10, dim_particle = 3, rng = None, order_by_pt = True,

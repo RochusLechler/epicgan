@@ -10,7 +10,6 @@ import time
 import tqdm
 
 import numpy as np
-from scipy.stats import wasserstein_distance
 import torch
 from epicgan import utils, data_proc, models, evaluation, performance_metrics
 
@@ -403,9 +402,6 @@ class TrainableModel:
                                         rng = rng, device = self.device)
 
         gen_out = self.generator(noise_particle, noise_global)
-        #normalise output
-        gen_out = data_proc.normalise_dataset(gen_out, means = self.train_set_means,
-                                            stds = self.train_set_stds, norm_sigma = norm_sigma)
 
         #outputs of the Discriminator
         discr_out_real = self.discriminator(data)
@@ -437,13 +433,24 @@ class TrainableModel:
             data = data.detach().cpu().numpy()
             gen_out = gen_out.detach().cpu().numpy()
 
+            if inv_normalise_data:
+                data = data_proc.inverse_normalise_dataset(data, self.train_set_means, self.train_set_stds, norm_sigma = norm_sigma)
+                gen_out = data_proc.inverse_normalise_dataset(gen_out, self.train_set_means, self.train_set_stds, norm_sigma = norm_sigma)
+
             if order_by_pt:
                 data = utils.order_array_pt(data)
                 gen_out = utils.order_array_pt(gen_out)
+            
+            if set_min_pt:
+                gen_out = data_proc.set_min_pt(gen_out, self.train_set_mins[0])
+
+            if center_gen:
+                gen_out = utils.center_jets(gen_out)
 
             w_dist = performance_metrics.wasserstein_mass(data, gen_out, num_samples = data.shape[0], num_batches = 1,
                 return_std = False, rng = rng)
             self.w_dist_per_iter_list.append(w_dist)
+
 
 
     def generator_training(self, local_batch_size, loss = "BCE"):
@@ -474,9 +481,7 @@ class TrainableModel:
                                         rng = rng, device = self.device)
 
         gen_out = self.generator(noise_particle, noise_global)
-        #normalise output
-        gen_out = data_proc.normalise_dataset(gen_out, means = self.train_set_means,
-                                            stds = self.train_set_stds, norm_sigma = norm_sigma)
+        
         #output of discriminator
         discr_out = self.discriminator(gen_out)
         #loss: real_label, because generator wants to fool discriminator
