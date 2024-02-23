@@ -301,8 +301,15 @@ def get_kde(dataset_name):
     """
     path = datasets_folder + dataset_name + ".pkl"
 
-    with open(path, "rb") as f:
-        kde = pickle.load(f)
+    try:
+        with open(path, "rb") as f:
+            kde = pickle.load(f)
+    
+    except FileNotFoundError as e:
+        logger.exception(e)
+        logger.critical("could not find a KDE according to your dataset specification")
+
+        sys.exit()
 
     return kde
 
@@ -390,8 +397,21 @@ class PreparedDataset(IterableDataset):
 
         self.len_dataset = self.dataset.shape[0]
 
+        self.batch_dict = {}
+        self.batch_ids  = []
+        self.batches_defined = False
+
     def __getitem__(self, index):
-        super(PreparedDataset).__getitem__(index)
+        """index refers to a batch
+        """
+
+        if not self.batches_defined:
+            self.define_batches()
+
+        k, l  = self.batch_ids[index]
+        batch = self.batch_dict[k][l]
+        return batch
+        
 
 
     def num_iter_per_ep(self):
@@ -422,36 +442,17 @@ class PreparedDataset(IterableDataset):
 
         return int(num_iters)
 
-    def define_batches(self, data):
+    def define_batches(self):
         """Makes batches of equal effective particle multiplicity n_eff and
         size self.batch_size or less for remaining samples.
 
-        Arguments
-        -----------
-
-        data: np.array
-            dataset to be split into batches of equal n_eff
-
-
-        Returns
-        ----------
-
-        batch_dict: dict
-            nested dictionary; contains a dictionary of batches for every unique
-            value n_eff
-
-        batch_ids: np.array
-            each entry contains a tuple of indices, the first indexing the value
-            of n_eff and the second indexing the batch.
         """
 
         #same functionality as utils.calc_multiplicities, but we need the intermediate nonzero counts
-        nonzero_counts = np.count_nonzero(data[:,:,0], axis = 1)
+        nonzero_counts = np.count_nonzero(self.dataset[:,:,0], axis = 1)
         #we do not need the frequencies here
         unique_vals = np.unique(nonzero_counts)
-
         #containers for the overall dataset
-        batch_dict = {}
         batch_ids_list  = []
 
         #loop over all the unique values of n_eff
@@ -460,7 +461,7 @@ class PreparedDataset(IterableDataset):
 
             mask = nonzero_counts == unique_val
             #unique dataset for the specific value of n
-            data_unique = data[mask]
+            data_unique = self.dataset[mask]
             #drop the particles that were zero-padded, note that the particles
             #are ordered in descending order in p_t
             data_unique = data_unique[:,0:unique_val,:]
@@ -487,14 +488,14 @@ class PreparedDataset(IterableDataset):
             batch_ids_unique = np.vstack(batch_ids_list_unique)
 
             #add dictionary entry containing all the batches for unique value of n
-            batch_dict[unique_idx] = batch_dict_unique
+            self.batch_dict[unique_idx] = batch_dict_unique
             #process the indices to uniquely identify each batch
             batch_ids_list.append(batch_ids_unique)
 
         #stack the ids to be able to draw a tuple indexing a batch with a single index
-        batch_ids = np.vstack(batch_ids_list)
+        self.batch_ids = np.vstack(batch_ids_list)
 
-        return batch_dict, batch_ids
+        self.batches_defined = True
 
 
 
@@ -507,26 +508,26 @@ class PreparedDataset(IterableDataset):
         #shuffle data
         if self.rng is not None:
             permutation = self.rng.permutation(self.len_dataset)
-            data = self.dataset[permutation]
-        else:
-            data = self.dataset
+            self.dataset = self.dataset[permutation]
 
         #obtain batches, each containing only events with equal number of particles
         #with nonzero p_t
-        batch_dict, batch_ids = self.define_batches(data)
+        if not self.batches_defined:
+            self.define_batches()
+        
         #shuffle batch indexing list to make sample drawing random
         if self.rng is not None:
-            permutation = self.rng.permutation(len(batch_ids))
-            batch_ids = batch_ids[permutation]
+            permutation = self.rng.permutation(len(self.batch_ids))
+            self.batch_ids = self.batch_ids[permutation]
 
 
         #implement now the loop that yields the batches
         j = 0 #index used to draw samples
         while True:
-            while j < len(batch_ids):
+            while j < len(self.batch_ids):
                 #draw batch and yield it
-                k, l  = batch_ids[j]
-                batch = batch_dict[k][l]
+                k, l  = self.batch_ids[j]
+                batch = self.batch_dict[k][l]
                 j += 1
                 yield batch
 
@@ -539,7 +540,7 @@ class PreparedDataset(IterableDataset):
                 permutation = self.rng.permutation(len(data))
                 data = data[permutation]
 
-                batch_dict, batch_ids = self.define_batches(data)
+                self.define_batches()
 
-                permutation = self.rng.permutation(len(batch_ids))
-                batch_ids = batch_ids[permutation]
+                permutation = self.rng.permutation(len(self.batch_ids))
+                self.batch_ids = self.batch_ids[permutation]
