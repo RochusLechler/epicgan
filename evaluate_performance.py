@@ -37,8 +37,6 @@ dim_global   = 10
 num_epic_layers_gen = 6
 #number of EPiC-layers in the discriminator
 num_epic_layers_dis = 3
-#random number generator used throughout the script for shuffling
-rng          = np.random.default_rng(3)
 #used to normalise input data to this std
 norm_sigma   = 5
 #total number of events generated for each evaluation assessment
@@ -57,7 +55,7 @@ order_by_pt = True
 center_gen   = True
 
 
-def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, save_file_name = None):
+def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, save_file_name = None, rng = None):
     """Function that evaluates a trained network. Has an option to make the plots
     that are in the original EPiC-GAN paper and save them to a .png-file
     When running the evaluation, ensure the place from where you run the training
@@ -84,6 +82,10 @@ def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, 
     save_file_name: str, default: None
         filename of the plots that will be saved, if make_plots is True;
         if None, plots will not be saved
+
+    rng: np.random.Generator, default: None
+        random number generator used for shuffling data; if equal to None, no
+        shuffling will be performed
     """
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -104,12 +106,12 @@ def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, 
     logger = logging.getLogger("main")
 
     #load the required model
-    generator = models.Generator(n_points, input_size_p = dim_particle,
+    generator = models.Generator(input_size_p = dim_particle,
                  input_size_g = dim_global, hid_size_p = 128, hid_size_g = 10,
                  hid_size_g_in = 128, num_epic_layers = num_epic_layers_gen)
-    discriminator = models.Discriminator(n_points, input_size_p = dim_particle,
-                 input_size_g = dim_global, hid_size_p = 128, hid_size_g = 10,
-                 hid_size_g_in = 128, num_epic_layers = num_epic_layers_dis)
+    discriminator = models.Discriminator(input_size_p = dim_particle,
+                 hid_size_p = 128, hid_size_g = 10, hid_size_g_in = 128, 
+                 num_epic_layers = num_epic_layers_dis)
 
     generator = generator.to(device)
     discriminator = discriminator.to(device)
@@ -136,7 +138,7 @@ def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, 
     train_set, _, test_set = data_proc.split_dataset(dataset, rng = rng)
 
     kde = data_proc.get_kde(dataset_name)
-    train_set_means, train_set_stds, train_set_mins, train_set_maxs = data_proc.dataset_properties(train_set)
+    train_set_means, train_set_stds, train_set_mins, _ = data_proc.dataset_properties(train_set)
 
 
     generated_events = evaluation.generation_loop(generator, n_points, kde, batch_size = batch_size,
@@ -166,6 +168,7 @@ def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, 
                     generated_events, num_samples = len_test_set, num_batches = 10,
                     avg_over_efps = True, return_std = True, rng = rng)
 
+    #commented lines calculate FPND score; Python version <= 3.10 required
     #if n_points == 30:
     #    fpnd_mean, fpnd_std = performance_metrics.fpnd_score(generated_events, dataname = dataset_name,
     #                        num_samples = len_test_set, num_batches = 3, return_std = True)
@@ -194,7 +197,6 @@ def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, 
 
     if make_plots:
         save_folder = "save_models"
-
         fig = plot_overview(test_set, dataset_name, generated_events)
 
         try:
@@ -214,14 +216,14 @@ def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, 
 
 
 
-##############  got the code for the plots in this one from EPiC-GAN Github  #################
+##############  got the code for the plots in this function from EPiC-GAN Github  #################
 def plot_overview(test_set, dataset_name, generated_events = None, generator = None, n_points = None,
                     kde = None, batch_size = 128, n_tot_generation = 300000,
                     dim_global = 10, dim_particle = 3, rng = None, order_by_pt = True,
                     set_min_pt = True, min_pt = 0, center_gen = True,
                     inv_normalise_data = True, inv_means = np.zeros(3), inv_stds = np.ones(3),
                     inv_norm_sigma = 1, device = "cuda"):
-    """Function makes the plots that are given in the original EPiC-GAN paper.
+    """This function makes the 9 plots that are given for each dataset in the original EPiC-GAN paper.
 
     Arguments
     -------------
@@ -236,7 +238,7 @@ def plot_overview(test_set, dataset_name, generated_events = None, generator = N
         generated events to use for evaluation; IF SPECIFIED, ALL OF THE FOLLOWING
         ARGUMENTS ARE REDUNDANT
 
-    generator: Generator
+    generator: epicgan.models.Generator
         generator network with which to perform the event generation; needs to be specified
         when generated_events is None
 
@@ -295,6 +297,12 @@ def plot_overview(test_set, dataset_name, generated_events = None, generator = N
 
     device: str, default: "cuda"
         device to which to send variables
+
+    Returns
+    ------------
+
+    fig: matplotlib.figure
+        figure containing the 9 plots
     """
 
     logger = logging.getLogger("main")

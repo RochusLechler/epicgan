@@ -60,18 +60,11 @@ def wasserstein_mass(real_jets, fake_jets, num_samples = 10000, num_batches = 5,
         real_jets = real_jets[permutation1]
         fake_jets = fake_jets[permutation2]
 
-    #features need to be in order [eta, phi, p_t]
-    #real_jets = real_jets[:,:,[1,2,0]]
-    #fake_jets = fake_jets[:,:,[1,2,0]]
-
     #get masses of the jets
     masses_real = utils.jet_masses(real_jets)
     masses_fake = utils.jet_masses(fake_jets)
 
-    #masses_real = jetnet.utils.jet_features(real_jets)["mass"]
-    #masses_fake = jetnet.utils.jet_features(fake_jets)["mass"]
-
-    #ensure that masses are stored array-like
+    #ensure that masses are stored array-like also for size of jets 1
     if masses_real.ndim == 0:
         masses_real = np.array([masses_real])
     if masses_fake.ndim == 0:
@@ -85,7 +78,8 @@ def wasserstein_mass(real_jets, fake_jets, num_samples = 10000, num_batches = 5,
         k += num_samples
 
         wasserstein_dist_list.append(wasserstein_distance(masses_real, used_fake_masses))
-        wasserstein_dists = np.array(wasserstein_dist_list)
+
+    wasserstein_dists = np.array(wasserstein_dist_list)
 
     if return_std:
         return wasserstein_dists.mean(), wasserstein_dists.std()
@@ -101,7 +95,7 @@ def wasserstein_coords(real_jets, fake_jets,
     deviations between the particle features of two sets of jets separately, or
     the mean of means and norm of standard deviations over the particle features.
     Means are computed over distances between real_jets and num_batches sets of
-    samples from fake_jets of size num_samples.
+    samples from fake_jets each of size num_samples.
 
     Arguments
     -------------
@@ -139,7 +133,7 @@ def wasserstein_coords(real_jets, fake_jets,
     Returns
     ------------
 
-    np.mean(mean) or means: float or list
+    np.mean(means) or means: float or list
         mean Wasserstein distance(s) between the particle features; which one is
         returned is determined by argument avg_over_features
 
@@ -220,7 +214,7 @@ def wasserstein_efps(real_jets, fake_jets,
     deviations between the energyflow polynomials of two sets of jets separately, or
     the mean of means and norm of standard deviations over the polynomials.
     Means are computed over distances between real_jets and num_batches sets of
-    samples from fake_jets of size num_samples.
+    samples from fake_jets each of size num_samples.
 
     Arguments
     -------------
@@ -324,6 +318,8 @@ def fpnd_score(fake_jets, dataname, num_samples = 10000, num_batches = 10,
     deviation between two sets of jets. Mean is computed over distances
     between real_jets and num_batches sets of samples from fake_jets of size
     num_samples.
+    Employs jetnet.evaluation.fpnd(), which requires torch-cluster, which requires
+    Python version <= 3.10
 
     Arguments
     -------------

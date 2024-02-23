@@ -3,16 +3,19 @@
 import logging
 import sys
 import os
+import pickle
+
 import h5py
 import numpy as np
-import pickle
 import torch
-from torch.utils.data import IterableDataset, DataLoader
+from torch.utils.data import IterableDataset
 
 from epicgan import utils
 
 logger = logging.getLogger("main")
 
+#folder where the datasets are stored in .hdf5 format,
+#pickle-files for the KDE also stored here
 datasets_folder = "./JetNet_datasets/"
 
 
@@ -391,7 +394,6 @@ class PreparedDataset(IterableDataset):
         super(PreparedDataset).__getitem__(index)
 
 
-
     def num_iter_per_ep(self):
         """Gives as output the number of iterations needed to complete an
         epoch given the specified batch size.
@@ -421,8 +423,8 @@ class PreparedDataset(IterableDataset):
         return int(num_iters)
 
     def define_batches(self, data):
-        """Makes batches of size self.batch_size or less for remaining samples.
-
+        """Makes batches of equal effective particle multiplicity n_eff and
+        size self.batch_size or less for remaining samples.
 
         Arguments
         -----------

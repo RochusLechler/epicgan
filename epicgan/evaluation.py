@@ -1,5 +1,5 @@
 """Implementations of functions used for evaluation of the performance of the
-networks.
+network.
 """
 
 import sys
@@ -21,8 +21,8 @@ def compute_wasserstein_distance(network, data_set, kde, batch_size = 128,
                     inv_normalise_data = True, inv_means = np.zeros(3), inv_stds = np.ones(3),
                     inv_norm_sigma = 1, runs = 10, device = "cuda"):
     """Computes the Wasserstein distance between masses of the jets of the
-    validation set and the generated jets. The return is the mean value of the
-    Wasserstein distances for 'runs' number of generated sets.
+    given dataset and generated jets. The return is the mean value of the
+    Wasserstein distances for 'runs' number of generated jet datasets.
 
     Arguments
     --------------
@@ -142,8 +142,8 @@ def generation_loop(network, n_points, kde, batch_size = 128, n_tot_generation =
     First, a distribution of n_eff, which is the number of particles per jet
     with p_t != 0, is sampled from the precomputed kernel density estimation for
     the respective dataset. Values out of the range [1, n_points] are discarded.
-    Note that this means that the number of returned events will in general be a
-    a bit smaller than n_tot_generation.
+    Note that this means that the number of returned events  can be
+    a bit smaller than the specified n_tot_generation.
     Then, the specified generator network generates jets
     of particle multiplicity n_eff as often as the kernel density estimation
     yielded that value n_eff. Afterwards, zero-padding increases the final

@@ -18,7 +18,7 @@ logger = logging.getLogger("main")
 
 
 def calc_multiplicities(p_dataset):
-    """calculates the number of particles with p_t > 0 within a jet and calculates
+    """Calculates the number of particles with p_t > 0 within a jet and calculates
     frequencies of these numbers throughout the dataset.
     Assumed shape of dataset: [total_size, n_points, n_features]
 
@@ -26,8 +26,8 @@ def calc_multiplicities(p_dataset):
     Arguments
     -------------
 
-    p_dataset: np.ndarray
-        np.ndarray of the dataset in shape [total_size, n_points, n_features]
+    p_dataset: np.array
+        array containing the dataset in shape [total_size, n_points, n_features]
 
     Returns
     ---------
@@ -36,10 +36,9 @@ def calc_multiplicities(p_dataset):
         contains the unique numbers of particles with nonzero p_t within a jet
         occuring in the dataset
 
-    frequencies:
+    frequencies: np.array
         contains the corresponding frequencies, with which the value in unique_vals
         occur.
-
     """
 
     try:
@@ -61,12 +60,12 @@ def calc_multiplicities(p_dataset):
 def calc_kde(p_dataset, file_path = None):
     """Calculates the kernel density estimation (kde) of the number of particles
     with nonzero p_t for a jet using Gaussian kernels.
-    Has an option to save the kde to a .pkl-file
+    Has an option to save the kde to a .pkl-file using pickle
 
     Arguments
     ----------------
-    p_dataset: np.ndarray
-        np.ndarray of the dataset in shape [total_size, n_points, n_features]
+    p_dataset: np.array
+        array containing the dataset in shape [total_size, n_points, n_features]
 
     file_path: str, default = None
         When specified, the function will try to dump the calculated KDE here;
@@ -76,7 +75,7 @@ def calc_kde(p_dataset, file_path = None):
     -----------
 
     kde: scipy.stats.gaussian_kde
-        gaussian_kde-object
+        gaussian_kde-object which can be resampled using resample()-method
     """
 
 
@@ -112,21 +111,20 @@ def jet_masses(data):
     Arguments
     -------------
 
-    data:
-        data for which to compute the jet masses
+    data: np.array
+        data for which to compute the jet masses, shape [array_size, n_points, n_features]
 
     Returns
     -------------
 
     masses: np.array
-        mass for every jet
+        mass for every jet, shape [array_size]
     """
     #using package energyflow, one can compute the mass from a Cartesian
     #representation of the particle  -->  transform into Cartesian coordinates,
     #then compute mass
 
     jets_cartesian = energyflow.p4s_from_ptyphims(data)
-    #sum over all particles within jet to obtain overall mass
     masses = energyflow.ms_from_p4s(jets_cartesian.sum(axis=1))
     return masses
 
@@ -137,14 +135,14 @@ def jet_pts(data):
     Arguments
     -------------
 
-    data:
-        data for which to compute the jet p_t
+    data: np.array
+        data for which to compute the jet p_t, shape [array_size, n_points, n_features]
 
     Returns
     -------------
 
     pts: np.array
-        p_t for every jet
+        p_t for every jet, shape [array_size]
     """
 
     jets_cartesian = energyflow.p4s_from_ptyphims(data)
@@ -159,14 +157,14 @@ def jet_etas(data):
     Arguments
     -------------
 
-    data:
-        data for which to compute eta
+    data: np.array
+        data for which to compute eta, shape [array_size, n_points, n_features]
 
     Returns
     -------------
 
     etas: np.array
-        eta for every jet
+        eta for every jet, shape [array_size]
     """
 
     jets_cartesian = energyflow.p4s_from_ptyphims(data)
@@ -180,14 +178,14 @@ def jet_phis(data):
     Arguments
     -------------
 
-    data:
-        data for which to compute the jet masses
+    data: np.array
+        data for which to compute the jet masses, shape [array_size, n_points, n_features]
 
     Returns
     -------------
 
     phis: np.array
-        phi for every jet
+        phi for every jet, shape [array_size]
     """
 
     jets_cartesian = energyflow.p4s_from_ptyphims(data)
@@ -195,20 +193,22 @@ def jet_phis(data):
 
     return phis
 
+
+
 def jet_multiplicities(data):
-    """Calculates the particle multiplicities n_eff in data.
+    """Calculates the effective particle multiplicities n_eff in data.
 
     Arguments
     ------------
 
     data: np.array
-        data for which to compute multiplicities
+        data for which to compute multiplicities, shape [array_size, n_points, n_features]
 
     Returns
     -----------
 
     mults: np.array
-        particle multiplicities
+        effective particle multiplicities, shape [array_size]
     """
 
     try:
@@ -217,25 +217,40 @@ def jet_multiplicities(data):
         logger.exception(e)
         logger.critical("""got data of unexpected shape, expected shape is
                         [n_samples, n_points, n_features]; this function returns
-                        nothing""")
-        return
+                        None""")
+        return None
 
     return mults
 
-########## got this one from EPiC-GAN Github!  #############
-def torch_p4s_from_ptyphi(ptyphi):
+
+
+########## got this function from EPiC-GAN Github, needed for evaluation plots #############
+def torch_p4s_from_ptyphi(ptetaphi):
+    """Calculates Cartesian four-vectors from [p_t, eta, phi]-representations.
+    Particles are assumed massless.
+
+    Arguments
+    -----------
+
+    ptetaphi: np.array
+        data in [p_t, eta, phi]-representations
+
+    Returns
+    -----------
+
+    p4s: torch.Tensor
+        data in Cartesian representation
     """
-    """
-    # get pts, ys, phis
-    #ptyphi = torch.Tensor(ptyphi).float()
-    pts, ys, phis = (ptyphi[...,0,np.newaxis],
-                     ptyphi[...,1,np.newaxis],
-                     ptyphi[...,2,np.newaxis])
+
+    pts, etas, phis = (ptetaphi[...,0,np.newaxis],
+                     ptetaphi[...,1,np.newaxis],
+                     ptetaphi[...,2,np.newaxis])
 
     Ets = torch.sqrt(pts**2) #  + ms**2) # everything assumed massless
-    p4s = torch.cat((Ets*torch.cosh(ys), pts*torch.cos(phis),
-                          pts*torch.sin(phis), Ets*torch.sinh(ys)), axis=-1)
+    p4s = torch.cat((Ets*torch.cosh(etas), pts*torch.cos(phis),
+                          pts*torch.sin(phis), Ets*torch.sinh(etas)), axis=-1)
     return p4s
+
 
 
 
@@ -250,6 +265,7 @@ def center_jets(data):
 
     Returns
     -----------
+
     data: np.array
         centered data
     """
