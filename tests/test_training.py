@@ -23,8 +23,14 @@ class TestTraining(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        os.remove("logbooks/logbook_training_gluon30test.log")
-        os.remove("saved_models/gluon30test.tar")
+
+        path = "logbooks/logbook_training_gluon30test.log"
+        if os.path.exists(path):
+            os.remove(path)
+
+        path = "saved_models/gluon30test.tar"
+        if os.path.exists(path):
+            os.remove(path)
 
     def test_training_steps(self):
         batch = Tensor(self.model.dataset[0])
@@ -39,7 +45,7 @@ class TestTraining(unittest.TestCase):
         self.model.epoch_counter += 1
         self.model.validation_loop(n_tot_generation = 120, runs = 5, set_min_pt = True, order_by_pt = True, inv_normalise_data = True, center_gen = True)
 
-    def test_trainin_loop(self):
+    def test_training_loop(self):
 
         #make actual training set a dummy set
         dataset = np.array(np.random.normal(size = (110,30,3)), dtype = "float32")
