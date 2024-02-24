@@ -16,43 +16,6 @@ from epicgan import utils, data_proc, models, evaluation, performance_metrics
 
 
 
-
-#hard-coded parameters
-
-#learning rate of the generator
-lr_G         = 1e-4
-#learning rate of the discriminator
-lr_D         = 1e-4
-#beta_1 parameter of the Adam optimizers
-beta_1       = 0.9
-#dimension of the particle space; default 3 are p_t, eta, phi
-dim_particle = 3
-#dimension of the global variable space within the networks
-dim_global   = 10
-#number of EPiC-layers in the generator
-num_epic_layers_gen = 6
-#number of EPiC-layers in the discriminator
-num_epic_layers_dis = 3
-#used to normalise input data to this std
-norm_sigma   = 5
-#total number of events generated for each evaluation assessment
-n_tot_generation = 300000
-#number of comparison runs for each Wasserstein validation step
-#make sure runs is <= n_tot_generation divided by the length of validation and test set
-runs = 10
-#whether to set p_t coordinates of generated events to minimum value found in training set
-set_min_pt   = True
-#whether to normalise generated events to mean & std of training set
-inv_normalise_data = True
-#whether to order particles by p_t in validation loops
-order_by_pt = True
-#whether to center the eta- and phi-coordinates of generated events
-center_gen   = True
-
-
-
-
-
 class TrainableModel:
     """A class incorporating the GAN model. It has a member function that
     performs the training.
@@ -63,7 +26,7 @@ class TrainableModel:
     3. There is a folder 'logbooks', the logfile will be stored here
     """
 
-    def __init__(self, dataset_name, batch_size = 128, rng = None, file_suffix = None, load = False, load_file_name = None, w_dist_per_iter = False):
+    def __init__(self, dataset_name, batch_size = 128, rng = None, file_suffix = None, load = False, load_file_name = None, **kwargs):
         """Class constructor
 
         Arguments
@@ -87,17 +50,76 @@ class TrainableModel:
 
         load : bool, default: False
             if True, tries to initialise the model by loading a model according
-            to dataset_name
+            to load_file_name
 
         load_file_name: str, default: None
             file name from which to load the model; needs to be specified whenever
             load is set to True
 
-        w_dist_per_iter: bool, default: False
-            if True, the dictionary returned contains a list of the Wasserstein distance 
-            between true data and generated events for every iteration (computed in the
-            discriminator training step)
+        **w_dist_per_iter: bool, default: False
+            if True, the dictionary returned by training method contains a list of the 
+            Wasserstein distances between true data and generated events for every 
+            iteration (computed in the discriminator training step)
+
+        **dim_particle: int, default: 3
+            dimension of the particle space, default 3 are [p_t, eta, phi]
+
+        **dim_global: int, default: 10
+            dimension of the global variable space within the networks
+
+        **num_epic_layers_gen: int, default: 6
+            number of EPiC-layers in the generator
+
+        **num_epic_layers_dis: int, default: 3
+            number of EPiC-layers in the discriminator
+
+        **norm_sigma: float, default: 5.
+            used to normalise data to this std
+
+        **beta_1: float, default: 0.9
+            beta_1 parameter of the (Adam) optimizers
         """
+
+        if "w_dist_per_iter" in kwargs:
+            w_dist_per_iter = kwargs["w_dist_per_iter"]
+        else:
+            w_dist_per_iter = False
+        self.w_dist_per_iter = w_dist_per_iter
+
+        if "dim_particle" in kwargs:
+            dim_particle = kwargs["dim_particle"]
+        else:
+            dim_particle = 3
+        self.dim_particle = dim_particle
+
+        if "dim_global" in kwargs:
+            dim_global = kwargs["dim_global"]
+        else:
+            dim_global = 10
+        self.dim_global = dim_global
+
+        if "num_epic_layers_gen" in kwargs:
+            num_epic_layers_gen = kwargs["num_epic_layers_gen"]
+        else:
+            num_epic_layers_gen = 6
+
+        if "num_epic_layers_dis" in kwargs:
+            num_epic_layers_dis = kwargs["num_epic_layers_dis"]
+        else:
+            num_epic_layers_dis = 3
+
+        if "norm_sigma" in kwargs:
+            norm_sigma = kwargs["norm_sigma"]
+        else:
+            norm_sigma = 5.
+        self.norm_sigma = norm_sigma
+
+        if "beta_1" in kwargs:
+            beta_1 = kwargs["beta_1"]
+        else:
+            beta_1 = 0.9
+
+
 
         self.dataset_name = dataset_name
         self.rng = rng
@@ -114,7 +136,6 @@ class TrainableModel:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         self.batch_size = batch_size
-        self.w_dist_per_iter = w_dist_per_iter
 
         self.real_label = 1.
         self.fake_label = 0.
@@ -131,10 +152,10 @@ class TrainableModel:
         self.train_set_means, self.train_set_stds, self.train_set_mins, self.train_set_maxs = data_proc.dataset_properties(self.train_set)
 
         #initialise the models
-        self.generator = models.Generator(input_size_p = dim_particle,
-                     input_size_g = dim_global, hid_size_p = 128, hid_size_g = 10,
+        self.generator = models.Generator(input_size_p = self.dim_particle,
+                     input_size_g = self.dim_global, hid_size_p = 128, hid_size_g = 10,
                      hid_size_g_in = 128, num_epic_layers = num_epic_layers_gen)
-        self.discriminator = models.Discriminator(input_size_p = dim_particle,
+        self.discriminator = models.Discriminator(input_size_p = self.dim_particle,
                      hid_size_p = 128, hid_size_g = 10, hid_size_g_in = 128, 
                      num_epic_layers = num_epic_layers_dis)
 
@@ -142,9 +163,9 @@ class TrainableModel:
         self.discriminator.to(self.device)
 
         #initialise optimisers
-        self.optimizer_g = torch.optim.Adam(self.generator.parameters(), lr = lr_G,
+        self.optimizer_g = torch.optim.Adam(self.generator.parameters(), lr = 1e-4,
                                             betas = (beta_1, 0.999), eps = 1e-14)
-        self.optimizer_d = torch.optim.Adam(self.discriminator.parameters(), lr = lr_D,
+        self.optimizer_d = torch.optim.Adam(self.discriminator.parameters(), lr = 1e-4,
                                             betas = (beta_1, 0.999), eps = 1e-14)
 
         #put models in training mode
@@ -155,10 +176,6 @@ class TrainableModel:
         #use custom class to prepare dataset
         self.dataset = data_proc.PreparedDataset(self.train_set, batch_size = self.batch_size, rng = self.rng)
         self.num_iter_per_ep = self.dataset.num_iter_per_ep()
-
-        #specify self.batch_size to None to ensure dataloader will employ __iter__ method
-        #as defined in PreparedDataset
-        self.dataloader = torch.utils.data.DataLoader(self.dataset, batch_size = None)
 
         self.epoch_counter = 0
 
@@ -209,7 +226,8 @@ class TrainableModel:
         self.logger.info("Training will take %d iterations per epoch", self.num_iter_per_ep)
 
 
-    def training(self, num_epochs, loss = "BCE"):
+
+    def training(self, num_epochs, loss = "BCE", **kwargs):
         """This function performs the actual training of the specified model.
         As optimizers for both generator and discriminator Adam is used. The 
         returns are contained in a dictionary with the results specified here
@@ -225,6 +243,30 @@ class TrainableModel:
             whether to use binary cross entropy ("BCE") or least-squares-GAN loss
             ("LS-GAN") for training; defaults to "BCE"
 
+        **lr_gen: float, default: 1e-4
+            sets the learning rate of the generator
+
+        **lr_dis: float, default: 1e-4
+            sets the learning rate of the discriminator
+
+        **n_tot_generation: int, default: 300000
+            number of samples generated for each validation step
+
+        **runs: int, default: 10
+            number of comparison runs for each validation step
+            make sure n_tot_generation/runs is larger than the length of validation and test set
+
+        **set_min_pt: bool, default: True
+            if True, sets p_t coordinates of generated events to minimum value found in training set
+
+        **order_by_pt: bool, default: True
+            if True, orders particles by p_t in validation loops
+
+        **inv_normalise_data: bool, default: True
+            if True, normalises generated events in validation to mean & std of training set
+
+        **center_gen: bool, default: True
+            if True, centers the eta- and phi-coordinates of generated events in validation
 
         Returns
         -----------
@@ -245,6 +287,48 @@ class TrainableModel:
             list of all the Wasserstein distance scores on the validation set
 
         """
+
+        #if a lr was specified; if not, both are 1e-4
+        if "lr_gen" in kwargs: 
+            for g in self.optimizer_g.param_groups:
+                g['lr'] = kwargs["lr_gen"]
+
+        if "lr_dis" in kwargs: 
+            for g in self.optimizer_d.param_groups:
+                g['lr'] = kwargs["lr_dis"]
+
+        if "n_tot_generation" in kwargs:
+            n_tot_generation = kwargs["n_tot_generation"]
+        else:
+            n_tot_generation = 300000
+
+        if "runs" in kwargs:
+            runs = kwargs["runs"]
+        else:
+            runs = 10
+
+        if "set_min_pt" in kwargs:
+            set_min_pt = kwargs["set_min_pt"]
+        else:
+            set_min_pt = True
+
+        if "order_by_pt" in kwargs:
+            order_by_pt = kwargs["order_by_pt"]
+        else:
+            order_by_pt = True
+
+        if "inv_normalise_data" in kwargs:
+            inv_normalise_data = kwargs["inv_normalise_data"]
+        else:
+            inv_normalise_data = True
+
+        if "center_gen" in kwargs:
+            center_gen = kwargs["center_gen"]
+        else:
+            center_gen = True
+
+
+
         self.logger.info("loss is %s", loss)
 
         #start the training loop
@@ -253,8 +337,12 @@ class TrainableModel:
         #set epoch counter to 0 explicitly for case of multiple trainings
         self.epoch_counter = 0
 
+        #specify self.batch_size to None to ensure dataloader will employ __iter__ method
+        #as defined in PreparedDataset
+        dataloader = torch.utils.data.DataLoader(self.dataset, batch_size = None)
+
         #use tqdm in order to display a progress bar
-        iterator = tqdm.tqdm(self.dataloader, total = int(self.num_iter_per_ep*num_epochs - 1))
+        iterator = tqdm.tqdm(dataloader, total = int(self.num_iter_per_ep*num_epochs - 1))
         #training loop
         for batch in iterator:
             iteration_counter += 1
@@ -271,7 +359,7 @@ class TrainableModel:
                 self.loss_dis = 0
                 self.loss_gen = 0
 
-                self.validation_loop()
+                self.validation_loop(n_tot_generation, runs, set_min_pt, order_by_pt, inv_normalise_data, center_gen)
 
                 self.epoch_counter += 1
 
@@ -282,7 +370,7 @@ class TrainableModel:
                 break
 
             if inv_normalise_data:
-                batch = data_proc.normalise_dataset(batch, self.train_set_means, self.train_set_stds, norm_sigma = norm_sigma)
+                batch = data_proc.normalise_dataset(batch, self.train_set_means, self.train_set_stds, norm_sigma = self.norm_sigma)
 
             data = batch.to(self.device)
             #this might be smaller than self.batch_size
@@ -314,18 +402,18 @@ class TrainableModel:
 
 
 
-    def validation_loop(self):
+    def validation_loop(self, n_tot_generation, runs, set_min_pt, order_by_pt, inv_normalise_data, center_gen):
         """Performs a single validation loop
         """
 
         w_distance = evaluation.compute_wasserstein_distance(self.generator, self.val_set, self.kde,
                         batch_size = self.batch_size, n_tot_generation = n_tot_generation,
-                        dim_global = dim_global, dim_particle = dim_particle,
+                        dim_global = self.dim_global, dim_particle = self.dim_particle,
                         rng = self.rng, set_min_pt = set_min_pt, min_pt = self.train_set_mins[0],
                         center_gen = center_gen, order_by_pt = order_by_pt,
                         inv_normalise_data = inv_normalise_data,
                         inv_means = self.train_set_means, inv_stds = self.train_set_stds,
-                        inv_norm_sigma = norm_sigma, runs = runs, device = self.device)
+                        inv_norm_sigma = self.norm_sigma, runs = runs, device = self.device)
 
         self.logger.info("Wasserstein-distance for epoch %d is %.5f", int(self.epoch_counter+1), w_distance)
 
@@ -336,12 +424,12 @@ class TrainableModel:
             #get Wasserstein distance for the test set
             self.test_w_distance = evaluation.compute_wasserstein_distance(self.generator, self.test_set, self.kde,
                             batch_size = self.batch_size, n_tot_generation = n_tot_generation,
-                            dim_global = dim_global, dim_particle = dim_particle,
+                            dim_global = self.dim_global, dim_particle = self.dim_particle,
                             rng = self.rng, set_min_pt = set_min_pt, min_pt = self.train_set_mins[0],
                             center_gen = center_gen, order_by_pt = order_by_pt,
                             inv_normalise_data = inv_normalise_data,
                             inv_means = self.train_set_means, inv_stds = self.train_set_stds,
-                            inv_norm_sigma = norm_sigma, runs = runs, device = self.device)
+                            inv_norm_sigma = self.norm_sigma, runs = runs, device = self.device)
             self.w_dist_list.append(self.test_w_distance)
 
             utils.save_model(self.generator, self.discriminator, self.optimizer_g, self.optimizer_d,
@@ -357,12 +445,12 @@ class TrainableModel:
 
                 self.test_w_distance = evaluation.compute_wasserstein_distance(self.generator, self.test_set, self.kde,
                                 batch_size = self.batch_size, n_tot_generation = n_tot_generation,
-                                dim_global = dim_global, dim_particle = dim_particle,
+                                dim_global = self.dim_global, dim_particle = self.dim_particle,
                                 rng = self.rng, set_min_pt = set_min_pt, min_pt = self.train_set_mins[0],
                                 center_gen = center_gen, order_by_pt = order_by_pt,
                                 inv_normalise_data = inv_normalise_data,
                                 inv_means = self.train_set_means, inv_stds = self.train_set_stds,
-                                inv_norm_sigma = norm_sigma, runs = runs, device = self.device)
+                                inv_norm_sigma = self.norm_sigma, runs = runs, device = self.device)
                 self.w_dist_list.append(self.test_w_distance)
 
 
@@ -401,7 +489,7 @@ class TrainableModel:
         self.discriminator.zero_grad()
 
         noise_global, noise_particle = data_proc.get_noise(self.n_points, batch_size = local_batch_size,
-                                        dim_global = dim_global, dim_particle = dim_particle,
+                                        dim_global = self.dim_global, dim_particle = self.dim_particle,
                                         rng = self.rng, device = self.device)
 
         gen_out = self.generator(noise_particle, noise_global)
@@ -436,19 +524,13 @@ class TrainableModel:
             data = data.detach().cpu().numpy()
             gen_out = gen_out.detach().cpu().numpy()
 
-            if inv_normalise_data:
-                data = data_proc.inverse_normalise_dataset(data, self.train_set_means, self.train_set_stds, norm_sigma = norm_sigma)
-                gen_out = data_proc.inverse_normalise_dataset(gen_out, self.train_set_means, self.train_set_stds, norm_sigma = norm_sigma)
-
-            if order_by_pt:
-                data = utils.order_array_pt(data)
-                gen_out = utils.order_array_pt(gen_out)
             
-            if set_min_pt:
-                gen_out = data_proc.set_min_pt(gen_out, self.train_set_mins[0])
-
-            if center_gen:
-                gen_out = utils.center_jets(gen_out)
+            data = data_proc.inverse_normalise_dataset(data, self.train_set_means, self.train_set_stds, norm_sigma = self.norm_sigma)
+            gen_out = data_proc.inverse_normalise_dataset(gen_out, self.train_set_means, self.train_set_stds, norm_sigma = self.norm_sigma)
+            data = utils.order_array_pt(data)
+            gen_out = utils.order_array_pt(gen_out)
+            gen_out = data_proc.set_min_pt(gen_out, self.train_set_mins[0])
+            gen_out = utils.center_jets(gen_out)
 
             w_dist = performance_metrics.wasserstein_mass(data, gen_out, num_samples = data.shape[0], num_batches = 1,
                 return_std = False, rng = self.rng)
@@ -480,7 +562,7 @@ class TrainableModel:
         self.generator.zero_grad()
 
         noise_global, noise_particle = data_proc.get_noise(self.n_points, batch_size = local_batch_size,
-                                        dim_global = dim_global, dim_particle = dim_particle,
+                                        dim_global = self.dim_global, dim_particle = self.dim_particle,
                                         rng = self.rng, device = self.device)
 
         gen_out = self.generator(noise_particle, noise_global)
