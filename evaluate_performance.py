@@ -196,7 +196,7 @@ def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, 
     #    result_dict["fpnd_std"]  = fpnd_std
 
     if make_plots:
-        save_folder = "save_models"
+        save_folder = "./saved_models"
         fig = plot_overview(test_set, dataset_name, generated_events)
 
         try:

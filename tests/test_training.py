@@ -22,8 +22,9 @@ class TestTraining(unittest.TestCase):
         self.model.test_set = np.random.normal(size = (20,30,3))
 
     @classmethod
-    def classTeatDown(cls):
+    def tearDownClass(cls):
         os.remove("logbooks/logbook_training_gluon30test.log")
+        os.remove("saved_models/gluon30test.tar")
 
     def test_training_steps(self):
         batch = Tensor(self.model.dataset[0])

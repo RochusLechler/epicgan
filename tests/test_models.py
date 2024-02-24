@@ -37,7 +37,7 @@ class TestModels(unittest.TestCase):
 
 
     @classmethod
-    def classTearDown(self):
+    def tearDownClass(self):
         os.remove("./saved_models/test_save.tar")
 
 
@@ -105,7 +105,7 @@ class TestDatasetClass(unittest.TestCase):
         self.dataset = data_proc.PreparedDataset(dummy_data, self.batch_size, rng = np.random.default_rng(1))
 
 
-    def test_dataindexing_batches(self):
+    def test_batches(self):
         """tests that program 
         """
         item = self.dataset[0]
