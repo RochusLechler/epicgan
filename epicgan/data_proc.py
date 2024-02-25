@@ -537,8 +537,8 @@ class PreparedDataset(IterableDataset):
             j = 0
             #if shuffling, we reshuffle the whole dataset to obtain different batches
             if self.rng is not None:
-                permutation = self.rng.permutation(len(data))
-                data = data[permutation]
+                permutation = self.rng.permutation(len(self.dataset))
+                self.dataset = self.dataset[permutation]
 
                 self.define_batches()
 

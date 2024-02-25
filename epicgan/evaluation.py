@@ -14,7 +14,7 @@ logger = logging.getLogger("main")
 
 
 
-def compute_wasserstein_distance(network, data_set, kde, batch_size = 128,
+def compute_wasserstein_distance(network, data_set, kde, batch_size_gen = 500,
                     n_tot_generation = 300000, dim_global = 10, dim_particle = 3,
                     rng = None, set_min_pt = True, min_pt = 0, center_gen = True,
                     order_by_pt = True,
@@ -36,8 +36,8 @@ def compute_wasserstein_distance(network, data_set, kde, batch_size = 128,
     kde: scipy.stats.gaussian_kde
         kernel density estimation of n_eff for the dataset
 
-    batch_size: int, default: 128
-        batch size to be created by generator
+    batch_size_gen: int, default: 500
+        batch size at which noise samples are passed through the generator
 
     n_tot_generation: int, default: 300000
         number of points that will be sampled from kde
@@ -101,7 +101,7 @@ def compute_wasserstein_distance(network, data_set, kde, batch_size = 128,
 
     len_data_set, n_points = data_set.shape[0], data_set.shape[1]
     generated_events = generation_loop(network, n_points, kde,
-                        batch_size = batch_size, n_tot_generation = n_tot_generation,
+                        batch_size = batch_size_gen, n_tot_generation = n_tot_generation,
                         dim_global = dim_global, dim_particle = dim_particle, rng = rng,
                         order_by_pt = order_by_pt, set_min_pt = set_min_pt,
                         min_pt = min_pt, center_gen = center_gen,
@@ -132,7 +132,7 @@ def compute_wasserstein_distance(network, data_set, kde, batch_size = 128,
 
 
 
-def generation_loop(network, n_points, kde, batch_size = 128, n_tot_generation = 300000,
+def generation_loop(network, n_points, kde, batch_size = 500, n_tot_generation = 300000,
                     dim_global = 10, dim_particle = 3, rng = None, order_by_pt = True,
                     set_min_pt = True, min_pt = 0, center_gen = True,
                     inv_normalise_data = True, inv_means = np.zeros(3), inv_stds = np.ones(3),
@@ -169,7 +169,7 @@ def generation_loop(network, n_points, kde, batch_size = 128, n_tot_generation =
         kernel density estimation of n_eff for the dataset
 
     batch_size: int, default: 128
-        batch size to be created by generator
+        batch size at which noise samples are passed through the generator
 
     n_tot_generation: int, default: 300000
         number of points that will be sampled from kde
