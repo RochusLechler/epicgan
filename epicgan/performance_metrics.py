@@ -11,11 +11,11 @@ from epicgan import utils
 
 logger = logging.getLogger("main")
 
-def wasserstein_mass(real_jets, fake_jets, num_samples = 10000, num_batches = 5,
+def wasserstein_mass(real_jets, fake_jets, num_samples = 10000, runs = 5,
                 return_std = True, rng = None):
     """Returns the mean Wasserstein distance and optionally the standard deviation
     between the masses of two sets of jets. Mean is computed over distances
-    between real_jets and num_batches sets of samples from fake_jets of size
+    between real_jets and runs sets of samples from fake_jets of size
     num_samples.
 
     Arguments
@@ -26,13 +26,13 @@ def wasserstein_mass(real_jets, fake_jets, num_samples = 10000, num_batches = 5,
 
     fake_jets: np.array
         set of events; make sure it has length greater or equal to
-        num_samples*num_batches
+        num_samples*runs
 
     num_samples: int, default: 10000
         number of samples from fake_jets used for computation of Wasserstein
         distance each iteration
 
-    num_batches: int, default: 5
+    runs: int, default: 5
         number of iterations/batches from fake_jets for computation of Wasserstein
         distance
 
@@ -73,7 +73,7 @@ def wasserstein_mass(real_jets, fake_jets, num_samples = 10000, num_batches = 5,
     wasserstein_dist_list = []
 
     k = 0
-    for _ in range(num_batches):
+    for _ in range(runs):
         used_fake_masses = masses_fake[k:int(k+num_samples)]
         k += num_samples
 
@@ -89,12 +89,12 @@ def wasserstein_mass(real_jets, fake_jets, num_samples = 10000, num_batches = 5,
 
 
 def wasserstein_coords(real_jets, fake_jets,
-                exclude_zeros = True, num_samples = 10000, num_batches = 5,
+                exclude_zeros = True, num_samples = 10000, runs = 5,
                 avg_over_features = True, return_std = True, rng = None):
     """Returns either the mean Wasserstein distances and optionally the standard
     deviations between the particle features of two sets of jets separately, or
     the mean of means and norm of standard deviations over the particle features.
-    Means are computed over distances between real_jets and num_batches sets of
+    Means are computed over distances between real_jets and runs sets of
     samples from fake_jets each of size num_samples.
 
     Arguments
@@ -105,7 +105,7 @@ def wasserstein_coords(real_jets, fake_jets,
 
     fake_jets: np.array
         set of events; make sure it has length greater or equal to
-        num_samples*num_batches
+        num_samples*runs
 
     exclude_zeros: bool, default: True
         if True, the function ignores zero-padded particles
@@ -114,7 +114,7 @@ def wasserstein_coords(real_jets, fake_jets,
         number of samples from fake_jets used for computation of Wasserstein
         distance each iteration
 
-    num_batches: int, default: 5
+    runs: int, default: 5
         number of iterations/batches from fake_jets for computation of Wasserstein
         distance
 
@@ -165,7 +165,7 @@ def wasserstein_coords(real_jets, fake_jets,
         used_real_jets = real_jets[mask_real]
 
     k = 0
-    for j in range(num_batches):
+    for j in range(runs):
         used_fake_jets = fake_jets[k:int(k+num_samples)]
 
         if exclude_zeros:
@@ -208,12 +208,12 @@ def wasserstein_coords(real_jets, fake_jets,
 
 def wasserstein_efps(real_jets, fake_jets,
     efpset_args = [("n==", 4), ("d==", 4), ("p==", 1)],
-    num_samples = 10000, num_batches = 5, avg_over_efps = True,
+    num_samples = 10000, runs = 5, avg_over_efps = True,
     return_std = True, rng = None):
     """Returns either the mean Wasserstein distances and optionally the standard
     deviations between the energyflow polynomials of two sets of jets separately, or
     the mean of means and norm of standard deviations over the polynomials.
-    Means are computed over distances between real_jets and num_batches sets of
+    Means are computed over distances between real_jets and runs sets of
     samples from fake_jets each of size num_samples.
 
     Arguments
@@ -224,7 +224,7 @@ def wasserstein_efps(real_jets, fake_jets,
 
     fake_jets: np.array
         set of events; make sure it has length greater or equal to
-        num_samples*num_batches
+        num_samples*runs
 
     efpset_args: list, default: [("n==", 4), ("d==", 4), ("p==", 1)]
         list of arguments for computation of energyflow polynomials; for further
@@ -234,7 +234,7 @@ def wasserstein_efps(real_jets, fake_jets,
         number of samples from fake_jets used for computation of Wasserstein
         distance each iteration
 
-    num_batches: int, default: 5
+    runs: int, default: 5
         number of iterations/batches from fake_jets for computation of Wasserstein
         distance
 
@@ -279,7 +279,7 @@ def wasserstein_efps(real_jets, fake_jets,
     wasserstein_dist_list = []
 
     k = 0
-    for _ in range(num_batches):
+    for _ in range(runs):
         used_fake_efps = efps_fake[k:int(k+num_samples)]
         k += num_samples
 
@@ -312,11 +312,11 @@ jettype_dict = {
 }
 
 
-def fpnd_score(fake_jets, dataname, num_samples = 10000, num_batches = 10,
+def fpnd_score(fake_jets, dataname, num_samples = 10000, runs = 10,
                 return_std = True):
     """Returns the mean Frechet ParticleNet distance and optionally the standard
     deviation between two sets of jets. Mean is computed over distances
-    between real_jets and num_batches sets of samples from fake_jets of size
+    between real_jets and runs sets of samples from fake_jets of size
     num_samples.
     Employs jetnet.evaluation.fpnd(), which requires torch-cluster, which requires
     Python version <= 3.10
@@ -326,13 +326,13 @@ def fpnd_score(fake_jets, dataname, num_samples = 10000, num_batches = 10,
 
     fake_jets: np.array
         set of events; make sure it has length greater or equal to
-        num_samples*num_batches
+        num_samples*runs
 
     num_samples: int, default: 10000
         number of samples from fake_jets used for computation of FPND at each
         iteration
 
-    num_batches: int, default: 5
+    runs: int, default: 5
         number of iterations/batches from fake_jets for computation of FPND
 
     return_std: bool, default: True
@@ -368,7 +368,7 @@ def fpnd_score(fake_jets, dataname, num_samples = 10000, num_batches = 10,
     fpnd_list = []
     k = 0
 
-    for _ in range(num_batches):
+    for _ in range(runs):
         used_jets = fake_jets[k:int(k + num_samples)]
         k += num_samples
         fpnd = jetnet.evaluation.fpnd(used_jets, jet_type = jettype, use_tqdm = False)

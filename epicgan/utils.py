@@ -78,7 +78,6 @@ def calc_kde(p_dataset, file_path = None):
         gaussian_kde-object which can be resampled using resample()-method
     """
 
-
     try:
         mults = np.count_nonzero(p_dataset[:,:,0], axis = 1)
     except IndexError as e:
