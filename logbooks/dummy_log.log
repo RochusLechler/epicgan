@@ -1,1 +1,1 @@
-
+This file is only here, such that the "logbooks"-folder can be uploaded to GitHub. The folder is needed in order for the unittests to run successfully in the continuous integration (Some of them create files here and delete them again).
