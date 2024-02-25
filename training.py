@@ -1,7 +1,7 @@
 """The class defined here is a trainable model. It has a method that 
 performs the training of a model to be specified.
-Due to the sheer amount of variables the ones that are usually not changed are
-hard-coded above the class definition. They can be changed there.
+Due to the sheer amount of variables the ones that are usually not changed
+are implemented as kwargs.
 """
 
 import os
@@ -9,10 +9,10 @@ import sys
 import logging
 import time
 import tqdm
+import pickle
 
 import torch
 from epicgan import utils, data_proc, models, evaluation, performance_metrics
-
 
 
 
@@ -21,7 +21,7 @@ class TrainableModel:
     performs the training.
     When running the training, ensure the place from where you run the training
     has the following folders and contents:
-    1. The dataset is stored in folder 'JetNet_datasets' in '.hdf5'-format
+    1. The specified dataset is stored in folder 'JetNet_datasets' in '.hdf5'-format
     2. There is a folder 'saved_models', the best model will be stored here
     3. There is a folder 'logbooks', the logfile will be stored here
     """
@@ -80,44 +80,19 @@ class TrainableModel:
             beta_1 parameter of the (Adam) optimizers
         """
 
-        if "w_dist_per_iter" in kwargs:
-            w_dist_per_iter = kwargs["w_dist_per_iter"]
-        else:
-            w_dist_per_iter = False
-        self.w_dist_per_iter = w_dist_per_iter
+        self.w_dist_per_iter = kwargs.get("w_dist_per_iter", False)
 
-        if "dim_particle" in kwargs:
-            dim_particle = kwargs["dim_particle"]
-        else:
-            dim_particle = 3
-        self.dim_particle = dim_particle
+        self.dim_particle = kwargs.get("dim_particle", 3)
 
-        if "dim_global" in kwargs:
-            dim_global = kwargs["dim_global"]
-        else:
-            dim_global = 10
-        self.dim_global = dim_global
+        self.dim_global = kwargs.get("dim_global", 10)
 
-        if "num_epic_layers_gen" in kwargs:
-            num_epic_layers_gen = kwargs["num_epic_layers_gen"]
-        else:
-            num_epic_layers_gen = 6
+        num_epic_layers_gen = kwargs.get("num_epic_layers_gen", 6)
 
-        if "num_epic_layers_dis" in kwargs:
-            num_epic_layers_dis = kwargs["num_epic_layers_dis"]
-        else:
-            num_epic_layers_dis = 3
+        num_epic_layers_dis = kwargs.get("num_epic_layers_dis", 3)
 
-        if "norm_sigma" in kwargs:
-            norm_sigma = kwargs["norm_sigma"]
-        else:
-            norm_sigma = 5.
-        self.norm_sigma = norm_sigma
+        self.norm_sigma = kwargs.get("norm_sigma", 5)
 
-        if "beta_1" in kwargs:
-            beta_1 = kwargs["beta_1"]
-        else:
-            beta_1 = 0.9
+        beta_1 = kwargs.get("beta_1", 0.9)
 
 
 
@@ -126,9 +101,10 @@ class TrainableModel:
 
         if file_suffix is None:
             file_suffix = "main"
+        self.file_suffix = file_suffix
 
         try:
-            self.file_name_suffix = self.dataset_name + file_suffix
+            self.file_name_suffix = self.dataset_name + self.file_suffix
         except TypeError:
             print("file_suffix should be a string")
             sys.exit()
@@ -227,7 +203,7 @@ class TrainableModel:
 
 
 
-    def training(self, num_epochs, loss = "BCE", **kwargs):
+    def training(self, num_epochs, loss = "BCE", save_result_dict = False, **kwargs):
         """This function performs the actual training of the specified model.
         As optimizers for both generator and discriminator Adam is used. The 
         returns are contained in a dictionary with the results specified here
@@ -243,6 +219,15 @@ class TrainableModel:
             whether to use binary cross entropy ("BCE") or least-squares-GAN loss
             ("LS-GAN") for training; defaults to "BCE"
 
+        save_result_dict: bool, default: False
+            if True, dictionary containing results is stored to a .pkl-file with
+            name dataset_name + "_training_" + file_suffix in folder saved_models. Differing file_suffix
+            can be specified with **save_file_suffix
+
+        **save_file_suffix: str, default: file_suffix (specified in object initialisation)
+            dictionary containing results will be stored to .pkl-file with name
+            dataset_name + "_training_" + save_file_suffix
+
         **lr_gen: float, default: 1e-4
             sets the learning rate of the generator
 
@@ -255,6 +240,9 @@ class TrainableModel:
         **runs: int, default: 10
             number of comparison runs for each validation step
             make sure n_tot_generation/runs is larger than the length of validation and test set
+
+        **batch_size_gen: int, default: 500
+            batch size at which noise samples are passed through the generator
 
         **set_min_pt: bool, default: True
             if True, sets p_t coordinates of generated events to minimum value found in training set
@@ -288,6 +276,8 @@ class TrainableModel:
 
         """
 
+        save_file_suffix = kwargs.get("save_file_suffix", self.file_suffix)
+
         #if a lr was specified; if not, both are 1e-4
         if "lr_gen" in kwargs: 
             for g in self.optimizer_g.param_groups:
@@ -297,35 +287,19 @@ class TrainableModel:
             for g in self.optimizer_d.param_groups:
                 g['lr'] = kwargs["lr_dis"]
 
-        if "n_tot_generation" in kwargs:
-            n_tot_generation = kwargs["n_tot_generation"]
-        else:
-            n_tot_generation = 300000
+        n_tot_generation = kwargs.get("n_tot_generation", 300000)
 
-        if "runs" in kwargs:
-            runs = kwargs["runs"]
-        else:
-            runs = 10
+        runs = kwargs.get("runs", 10)
 
-        if "set_min_pt" in kwargs:
-            set_min_pt = kwargs["set_min_pt"]
-        else:
-            set_min_pt = True
+        batch_size_gen = kwargs.get("batch_size_gen", 500)
 
-        if "order_by_pt" in kwargs:
-            order_by_pt = kwargs["order_by_pt"]
-        else:
-            order_by_pt = True
+        set_min_pt = kwargs.get("set_min_pt", True)
 
-        if "inv_normalise_data" in kwargs:
-            inv_normalise_data = kwargs["inv_normalise_data"]
-        else:
-            inv_normalise_data = True
+        order_by_pt = kwargs.get("order_by_pt", True)
 
-        if "center_gen" in kwargs:
-            center_gen = kwargs["center_gen"]
-        else:
-            center_gen = True
+        inv_normalise_data = kwargs.get("inv_normalise_data", True)
+
+        center_gen = kwargs.get("center_gen", True)
 
 
 
@@ -359,7 +333,7 @@ class TrainableModel:
                 self.loss_dis = 0
                 self.loss_gen = 0
 
-                self.validation_loop(n_tot_generation, runs, set_min_pt, order_by_pt, inv_normalise_data, center_gen)
+                self.validation_loop(n_tot_generation, runs, batch_size_gen, set_min_pt, order_by_pt, inv_normalise_data, center_gen)
 
                 self.epoch_counter += 1
 
@@ -397,17 +371,24 @@ class TrainableModel:
         if self.w_dist_per_iter:
             results["w_dist_per_iter"] = self.w_dist_per_iter_list   
 
+        if save_result_dict:
+            folder = "saved_models"
+            path = os.path.join(folder, self.dataset_name + "_training_" + save_file_suffix + ".pkl")
+            f = open(path, "wb")
+            pickle.dump(results, f)
+            f.close()
+
         return results
 
 
 
 
-    def validation_loop(self, n_tot_generation, runs, set_min_pt, order_by_pt, inv_normalise_data, center_gen):
+    def validation_loop(self, n_tot_generation, runs, batch_size_gen, set_min_pt, order_by_pt, inv_normalise_data, center_gen):
         """Performs a single validation loop
         """
 
         w_distance = evaluation.compute_wasserstein_distance(self.generator, self.val_set, self.kde,
-                        batch_size = self.batch_size, n_tot_generation = n_tot_generation,
+                        batch_size_gen = batch_size_gen, n_tot_generation = n_tot_generation,
                         dim_global = self.dim_global, dim_particle = self.dim_particle,
                         rng = self.rng, set_min_pt = set_min_pt, min_pt = self.train_set_mins[0],
                         center_gen = center_gen, order_by_pt = order_by_pt,
@@ -423,7 +404,7 @@ class TrainableModel:
             self.best_epoch = self.epoch_counter + 1
             #get Wasserstein distance for the test set
             self.test_w_distance = evaluation.compute_wasserstein_distance(self.generator, self.test_set, self.kde,
-                            batch_size = self.batch_size, n_tot_generation = n_tot_generation,
+                            batch_size_gen = batch_size_gen, n_tot_generation = n_tot_generation,
                             dim_global = self.dim_global, dim_particle = self.dim_particle,
                             rng = self.rng, set_min_pt = set_min_pt, min_pt = self.train_set_mins[0],
                             center_gen = center_gen, order_by_pt = order_by_pt,
@@ -444,7 +425,7 @@ class TrainableModel:
                 self.best_epoch = self.epoch_counter + 1
 
                 self.test_w_distance = evaluation.compute_wasserstein_distance(self.generator, self.test_set, self.kde,
-                                batch_size = self.batch_size, n_tot_generation = n_tot_generation,
+                                batch_size_gen = batch_size_gen, n_tot_generation = n_tot_generation,
                                 dim_global = self.dim_global, dim_particle = self.dim_particle,
                                 rng = self.rng, set_min_pt = set_min_pt, min_pt = self.train_set_mins[0],
                                 center_gen = center_gen, order_by_pt = order_by_pt,
@@ -532,7 +513,7 @@ class TrainableModel:
             gen_out = data_proc.set_min_pt(gen_out, self.train_set_mins[0])
             gen_out = utils.center_jets(gen_out)
 
-            w_dist = performance_metrics.wasserstein_mass(data, gen_out, num_samples = data.shape[0], num_batches = 1,
+            w_dist = performance_metrics.wasserstein_mass(data, gen_out, num_samples = data.shape[0], runs = 1,
                 return_std = False, rng = self.rng)
             self.w_dist_per_iter_list.append(w_dist)
 

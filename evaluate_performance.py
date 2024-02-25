@@ -1,13 +1,14 @@
 """This script defines a function that evaluates performance of a trained network.
 Make sure that the hard-coded parameters that define the network architecture match
 the model you want to load.
-Due to the sheer amount of variables the ones that are usually not changed are
-hard-coded above the function definition. They can be changed there.
+Due to the sheer amount of variables the ones that are usually not changed
+are implemented as kwargs.
 """
 
 import os
 import sys
 import logging
+import pickle
 
 import numpy as np
 import torch
@@ -18,56 +19,22 @@ from epicgan import utils, data_proc, models, evaluation, performance_metrics
 
 
 
-#hard-coded parameters
 
 
-#learning rate of the generator
-lr_G         = 1e-4
-#learning rate of the discriminator
-lr_D         = 1e-4
-#beta_1 parameter of the Adam optimizers
-beta_1       = 0.9
-#batch size used in training
-batch_size   = 128
-#dimension of the particle space; default 3 are p_t, eta, phi
-dim_particle = 3
-#dimension of the global variable space within the networks
-dim_global   = 10
-#number of EPiC-layers in the generator
-num_epic_layers_gen = 6
-#number of EPiC-layers in the discriminator
-num_epic_layers_dis = 3
-#used to normalise input data to this std
-norm_sigma   = 5
-#total number of events generated for each evaluation assessment
-n_tot_generation = 300000
-#n_tot_generation = 3000 #just for now
-#number of comparison runs for each Wasserstein validation step
-#make sure runs is <= the number of times the length of validation/test sets fit into n_tot_generation
-runs         = 10
-#whether to set p_t coordinates of generated events to specified minimum value
-set_min_pt   = True
-#whether to normalise generated events to mean & std of training set
-inv_normalise_data = True
-#whether to order particles by p_t in validation loop
-order_by_pt = True
-#whether to center the eta- and phi-coordinates of generated events
-center_gen   = True
-
-
-def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, save_file_name = None, rng = None):
-    """Function that evaluates a trained network. Has an option to make the plots
-    that are in the original EPiC-GAN paper and save them to a .png-file
+def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, save_plots = True, save_result_dict = False, save_file_name = None, rng = None, **kwargs):
+    """Function that evaluates a (trained) network. Has an option to make the plots
+    that are in the original EPiC-GAN paper and save them to a .png-file.
     When running the evaluation, ensure the place from where you run the training
     has the following folders and contents:
-    1. There is a folder 'saved_models' wher the model you want to load is stored
-    2. There is a folder 'logbooks', the logfile will be stored here
+    1. The specified dataset is stored in folder 'JetNet_datasets' in '.hdf5'-format
+    2. There is a folder 'saved_models' where the model you want to load is stored
+    3. There is a folder 'logbooks', the logfile will be stored here
 
     Arguments:
     -----------
 
     dataset_name:
-        specifies the dataset; needed to obtain the test set
+        specifies the dataset
 
     model_name: str
         model specification; must exist in folder 'saved_models'; will also be
@@ -79,6 +46,14 @@ def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, 
     make_plots: bool, default: True
         if True, the plots that are in the original EPiC-GAN paper will be made
 
+    save_plots: bool, default: True
+        if True, plots will be saved to folder saved_plots with name save_file_name
+        as a .png-file.
+
+    save_result_dict: bool, default: False
+        if True, dictionary containing results is stored to a .pkl-file with
+        name dataset_name + "_evaluation_" + save_file_name in folder saved_models.
+
     save_file_name: str, default: None
         filename of the plots that will be saved, if make_plots is True;
         if None, plots will not be saved
@@ -86,7 +61,80 @@ def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, 
     rng: np.random.Generator, default: None
         random number generator used for shuffling data; if equal to None, no
         shuffling will be performed
+
+    **model_folder: str, default: "saved_models"
+        folder, where the model to be loaded is stored
+
+    **dim_particle: int, default: 3
+        dimension of the particle space, default 3 are [p_t, eta, phi]
+
+    **dim_global: int, default: 10
+        dimension of the global variable space within the networks
+
+    **num_epic_layers_gen: int, default: 6
+        number of EPiC-layers in the generator
+
+    **num_epic_layers_dis: int, default: 3
+        number of EPiC-layers in the discriminator
+
+    **norm_sigma: float, default: 5.
+        used to normalise data to this std
+
+    **n_tot_generation: int, default: 300000
+        number of samples generated for computing each evaluation score
+
+    **runs: int, default: 10
+        number of comparison runs for each evaluation score
+        make sure n_tot_generation/runs is larger than the length of the test set
+
+    **batch_size_gen: int, default: 500
+        batch size at which noise samples are passed through the generator
+
+    **set_min_pt: bool, default: True
+        If True, sets p_t coordinates of generated events to minimum value found in training set.
+
+    **order_by_pt: bool, default: True
+        If True, orders particles by p_t in generated events and test data.
+
+    **inv_normalise_data: bool, default: True
+        If True, normalises generated events to mean & std of training set
+
+    **center_gen: bool, default: True
+        If True, centers the eta- and phi-coordinates of generated events
+
+
+    Returns
+    ----------
+
+    result_dict: dict
     """
+
+    model_folder = kwargs.get("model_folder", "saved_models")
+
+    dim_particle = kwargs.get("dim_particle", 3)
+
+    dim_global = kwargs.get("dim_global", 10)
+
+    num_epic_layers_gen = kwargs.get("num_epic_layers_gen", 6)
+
+    num_epic_layers_dis = kwargs.get("num_epic_layers_dis", 3)
+
+    norm_sigma = kwargs.get("norm_sigma", 5)
+
+    n_tot_generation = kwargs.get("n_tot_generation", 300000)
+
+    runs = kwargs.get("runs", 10)
+
+    batch_size_gen = kwargs.get("batch_size_gen", 500)
+
+    set_min_pt = kwargs.get("set_min_pt", True)
+
+    order_by_pt = kwargs.get("order_by_pt", True)
+
+    inv_normalise_data = kwargs.get("inv_normalise_data", True)
+
+    center_gen = kwargs.get("center_gen", True)
+
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -107,22 +155,21 @@ def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, 
 
     #load the required model
     generator = models.Generator(input_size_p = dim_particle,
-                 input_size_g = dim_global, hid_size_p = 128, hid_size_g = 10,
+                 input_size_g = dim_global, hid_size_p = 128, hid_size_g = dim_global,
                  hid_size_g_in = 128, num_epic_layers = num_epic_layers_gen)
     discriminator = models.Discriminator(input_size_p = dim_particle,
-                 hid_size_p = 128, hid_size_g = 10, hid_size_g_in = 128, 
+                 hid_size_p = 128, hid_size_g = dim_global, hid_size_g_in = 128, 
                  num_epic_layers = num_epic_layers_dis)
 
     generator = generator.to(device)
     discriminator = discriminator.to(device)
 
-    optimizer_g = torch.optim.Adam(generator.parameters(), lr = lr_G,
-                                        betas = (beta_1, 0.999), eps = 1e-14)
-    optimizer_d = torch.optim.Adam(discriminator.parameters(), lr = lr_D,
-                                        betas = (beta_1, 0.999), eps = 1e-14)
+    optimizer_g = torch.optim.Adam(generator.parameters())
+    optimizer_d = torch.optim.Adam(discriminator.parameters())
 
     try:
-        generator, discriminator, optimizer_g, optimizer_d = utils.load_model(generator, discriminator, optimizer_g, optimizer_d, file_name = model_name, device = device)
+        generator, discriminator, optimizer_g, optimizer_d = utils.load_model(generator, discriminator, optimizer_g, optimizer_d, file_name = model_name, 
+                                                                              folder = model_folder, device = device)
     except FileNotFoundError as e:
         logger.exception(e)
         logger.critical("could not find a file named %s in saved_models", model_name)
@@ -141,7 +188,7 @@ def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, 
     train_set_means, train_set_stds, train_set_mins, _ = data_proc.dataset_properties(train_set)
 
 
-    generated_events = evaluation.generation_loop(generator, n_points, kde, batch_size = batch_size,
+    generated_events = evaluation.generation_loop(generator, n_points, kde, batch_size = batch_size_gen,
                         n_tot_generation = n_tot_generation, dim_global = dim_global,
                         dim_particle = dim_particle, rng = rng, order_by_pt = order_by_pt,
                         set_min_pt = set_min_pt, min_pt = train_set_mins[0], center_gen = center_gen,
@@ -156,19 +203,19 @@ def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, 
     len_test_set = len(test_set)
 
     w_mass_mean, w_mass_std = performance_metrics.wasserstein_mass(test_set,
-                                generated_events, num_samples = len_test_set, num_batches = 10,
+                                generated_events, num_samples = len_test_set, runs = runs,
                                 return_std = True, rng = rng)
 
     w_coords_mean, w_coords_std = performance_metrics.wasserstein_coords(test_set,
                     generated_events, exclude_zeros = True, num_samples = len_test_set,
-                    num_batches = 10, avg_over_features = True, return_std = True,
+                    runs = runs, avg_over_features = True, return_std = True,
                     rng = rng)
 
     w_efp_mean, w_efp_std = performance_metrics.wasserstein_efps(test_set,
-                    generated_events, num_samples = len_test_set, num_batches = 10,
+                    generated_events, num_samples = len_test_set, runs = runs,
                     avg_over_efps = True, return_std = True, rng = rng)
 
-    #commented lines calculate FPND score; Python version <= 3.10 required
+    #commented lines calculate FPND score; Python version <= 3.10, torch-cluster required
     #if n_points == 30:
     #    fpnd_mean, fpnd_std = performance_metrics.fpnd_score(generated_events, dataname = dataset_name,
     #                        num_samples = len_test_set, num_batches = 3, return_std = True)
@@ -195,17 +242,31 @@ def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, 
     #    result_dict["fpnd_mean"] = fpnd_mean
     #    result_dict["fpnd_std"]  = fpnd_std
 
-    if make_plots:
-        save_folder = "./saved_models"
-        fig = plot_overview(test_set, dataset_name, generated_events)
-
+    if save_result_dict:
+        folder = "saved_models"
         try:
-            plt.savefig(os.path.join(save_folder, save_file_name + ".png"))
+            path = os.path.join(folder, dataset_name + "_evaluation_" + save_file_name + ".pkl")
         except TypeError as e:
             logger.exception(e)
-            logger.warning("""please specify a string on where to save the plots,
-                            if you want to save them; figure will be returned,
+            logger.warning("""please specify a string on where to save the results,
+                            if you want to save them; result dictionary will be returned,
                             but not saved""")
+        f = open(path, "wb")
+        pickle.dump(result_dict, f)
+        f.close()
+
+    if make_plots:
+        folder = "./saved_plots"
+        fig = plot_overview(test_set, dataset_name, generated_events)
+
+        if save_plots:
+            try:
+                plt.savefig(os.path.join(folder, save_file_name + ".png"))
+            except TypeError as e:
+                logger.exception(e)
+                logger.warning("""please specify a string on where to save the plots,
+                                if you want to save them; figure will be returned,
+                                but not saved""")
 
         return result_dict, fig
 
@@ -218,12 +279,13 @@ def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, 
 
 ##############  got the code for the plots in this function from EPiC-GAN Github  #################
 def plot_overview(test_set, dataset_name, generated_events = None, generator = None, n_points = None,
-                    kde = None, batch_size = 128, n_tot_generation = 300000,
+                    kde = None, batch_size_gen = 500, n_tot_generation = 300000,
                     dim_global = 10, dim_particle = 3, rng = None, order_by_pt = True,
                     set_min_pt = True, min_pt = 0, center_gen = True,
                     inv_normalise_data = True, inv_means = np.zeros(3), inv_stds = np.ones(3),
                     inv_norm_sigma = 1, device = "cuda"):
     """This function makes the 9 plots that are given for each dataset in the original EPiC-GAN paper.
+    It does NOT save them.
 
     Arguments
     -------------
@@ -249,8 +311,8 @@ def plot_overview(test_set, dataset_name, generated_events = None, generator = N
     kde: scipy.stats.gaussian_kde
         kernel density estimation of n_eff for the dataset
 
-    batch_size: int, default: 128
-        batch size to be created by generator
+    batch_size_gen: int, default: 500
+        batch size at which noise samples are passed through the generator
 
     n_tot_generation: int, default: 300000
         number of points that will be sampled from kde
@@ -314,7 +376,7 @@ def plot_overview(test_set, dataset_name, generated_events = None, generator = N
                                will return None""")
             return None
 
-        gen_ary = evaluation.generation_loop(generator, n_points, kde, batch_size = batch_size, n_tot_generation = n_tot_generation,
+        gen_ary = evaluation.generation_loop(generator, n_points, kde, batch_size = batch_size_gen, n_tot_generation = n_tot_generation,
                             dim_global = dim_global, dim_particle = dim_particle, rng = rng, order_by_pt = order_by_pt,
                             set_min_pt = set_min_pt, min_pt = min_pt, center_gen = center_gen,
                             inv_normalise_data = inv_normalise_data, inv_means = inv_means, inv_stds = inv_stds,
