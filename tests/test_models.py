@@ -38,7 +38,9 @@ class TestModels(unittest.TestCase):
 
     @classmethod
     def tearDownClass(self):
-        os.remove("./saved_models/test_save.tar")
+        path = "./saved_models/test_save.tar"
+        if os.path.exists(path):
+            os.remove(path)
 
 
     def test_dims(self):

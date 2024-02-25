@@ -7,28 +7,45 @@ import numpy as np
 from torch import Tensor
 
 import training
+
 from epicgan import data_proc
+import evaluate_performance
 
 
 class TestTraining(unittest.TestCase):
-    """tests the implicit methods of the custom training class
+    """tests the implicit methods of the custom training class, as well 
+    as one full training loop including a validation step on a dummy
+    dataset. In the setup, the dummy dataset is created, if it doesn't 
+    exist already.
     """
 
     def setUp(self):
-        self.model = training.TrainableModel("gluon30", file_suffix = "test", rng = np.random.default_rng(1))
 
-        #make the validation and test set small dummy sets
-        self.model.val_set = np.random.normal(size = (20,30,3))
-        self.model.test_set = np.random.normal(size = (20,30,3))
+        dummy_set_file_path = "JetNet_datasets/test.hdf5"
+        if not os.path.exists(dummy_set_file_path):
+            import h5py
+            file_new = h5py.File(dummy_set_file_path, "w")
+            data = np.zeros((200,30,3))
+            for k in range(200):
+                randi = np.random.randint(low = 20, high = 31)
+                data[k,:randi,:] = np.random.normal(size = (randi,3))
+            file_new.create_dataset("particle_features", (200,30,3), dtype = "f", data = data)
+
+
+        self.model = training.TrainableModel("test", file_suffix = "test", rng = np.random.default_rng(1))
 
     @classmethod
     def tearDownClass(cls):
 
-        path = "logbooks/logbook_training_gluon30test.log"
+        path = "logbooks/logbook_training_testtest.log"
         if os.path.exists(path):
             os.remove(path)
 
-        path = "saved_models/gluon30test.tar"
+        path = "saved_models/testtest.tar"
+        if os.path.exists(path):
+            os.remove(path)
+
+        path = "saved_models/test_training_test.pkl"
         if os.path.exists(path):
             os.remove(path)
 
@@ -41,15 +58,11 @@ class TestTraining(unittest.TestCase):
 
     def test_validation_step(self):
 
-        self.model.validation_loop(n_tot_generation = 120, runs = 5, set_min_pt = True, order_by_pt = True, inv_normalise_data = True, center_gen = True)
+        self.model.validation_loop(n_tot_generation = 200, runs = 5, batch_size_gen = 150, set_min_pt = True, order_by_pt = True, inv_normalise_data = True, center_gen = True)
         self.model.epoch_counter += 1
-        self.model.validation_loop(n_tot_generation = 120, runs = 5, set_min_pt = True, order_by_pt = True, inv_normalise_data = True, center_gen = True)
+        self.model.validation_loop(n_tot_generation = 200, runs = 5, batch_size_gen = 150, set_min_pt = True, order_by_pt = True, inv_normalise_data = True, center_gen = True)
 
     def test_training_loop(self):
 
-        #make actual training set a dummy set
-        dataset = np.array(np.random.normal(size = (110,30,3)), dtype = "float32")
-        self.model.dataset = data_proc.PreparedDataset(dataset, batch_size = 20, rng = None)
-        self.model.num_iter_per_ep = self.model.dataset.num_iter_per_ep()
+        self.model.training(num_epochs = 1, save_result_dict = True, n_tot_generation = 200, runs = 5)
 
-        self.model.training(num_epochs = 1, n_tot_generation = 120, runs = 5)
