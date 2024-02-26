@@ -109,6 +109,16 @@ def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, 
     ----------
 
     result_dict: dict
+        dictionary containing the evaluation scores, keys: "w_mass_mean", "w_mass_std", 
+        "w_coords_mean", "w_coords_std", "w_efps_mean", "w_efps_std"
+        they refer to mean and standard deviation of the Wasserstein distances between real and
+        generated events using the mass distribution, the particle feature distributions p_t,
+        eta, phi (mean over those) and the distributions of the energyflow polynomials (mean
+        over those, see https://energyflow.network/docs/efp/)
+
+    fig: matplotlib.figure, optional
+        the evaluation plots
+
     """
 
     model_folder = kwargs.get("model_folder", "saved_models")
@@ -216,15 +226,58 @@ def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, 
 def evaluation_scores_plots(real_jets, fake_jets, runs, make_plots = True, name_plots = None, save_plots = True, save_result_dict = False, 
                       save_file_name = None, rng = None, **kwargs):
     """
+    Computes the evaluation scores and optionally the evaluation plots for given real and fake data.
 
 
     Arguments
     ----------
 
+    real_jets: np.array
+        set of events
 
+    fake_jets: np.array
+        set of events; make sure it has length greater or equal to
+        len(real_jets)*runs
+
+    make_plots: bool, default: True
+        if True, the plots that are in the original EPiC-GAN paper will be made
+
+    name_plots: str, default: None
+        label that will appear in the plots; if None, defaults to "main"
+
+    save_plots: bool, default: True
+        if True, plots will be saved to folder saved_plots with name save_file_name
+        as a .png-file.
+
+    save_result_dict: bool, default: False
+        if True, dictionary containing results is stored to a .pkl-file with
+        name "eval_scores_" + save_file_name in folder saved_models. Folder can be
+        changed by specifying keyword 'dict_save_folder'.
+
+    save_file_name: str, default: None
+        filename of the plots and/or result dictionary that will be saved.
+
+    rng: np.random.Generator, default: None
+        random number generator used for shuffling when computing evaluation scores; if None, no
+        shuffling is performed.
 
     **dict_save_folder: str, default: "saved_models"
         folder where to store the result dictionary
+
+    Returns
+    ----------
+
+    result_dict: dict
+        dictionary containing the evaluation scores, keys: "w_mass_mean", "w_mass_std", 
+        "w_coords_mean", "w_coords_std", "w_efps_mean", "w_efps_std"
+        they refer to mean and standard deviation of the Wasserstein distances between real and
+        generated events using the mass distribution, the particle feature distributions p_t,
+        eta, phi (mean over those) and the distributions of the energyflow polynomials (mean
+        over those, see https://energyflow.network/docs/efp/)
+
+    fig: matplotlib.figure, optional
+        the evaluation plots
+
     """
 
     logger = logging.getLogger("main")

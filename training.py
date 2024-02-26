@@ -1,5 +1,5 @@
 """The class defined here is a trainable model. It has a method that 
-performs the training of a model to be specified.
+performs the training and a method that performs the evaluation.
 Due to the sheer amount of variables the ones that are usually not changed
 are implemented as kwargs.
 """
@@ -19,18 +19,69 @@ import evaluate_performance
 
 
 class TrainableModel:
-    """A class incorporating the GAN model. It has a method that
-    performs the training.
-    When running the training, ensure the place from where you run the training
-    has the following folders and contents:
+    """A class incorporating the GAN model. It has a method training() that performs the training 
+    and a method evaluation() that performs the evaluation.
+    When running the training, ensure the location from where you run it has the following folders 
+    and contents:
     1. The specified dataset is stored in folder 'JetNet_datasets' in '.hdf5'-format
     2. There is a folder 'saved_models', the best model will be stored here
-    3. There is a folder 'logbooks', the logfile will be stored here
+    3. There is a folder 'logbooks', the logfile will be stored here; the log-filename is a concate-
+    nation of the dataset-name and the specified 'file_suffix'
+
+
+    Arguments
+    --------------
+    dataset_name: str
+        dataset specification
+
+    n_points: int
+        number of particles per jet, either 30 or 150
+
+    batch_size: int, default: 128
+        batch size used for the training
+
+    rng: np.random.Generator, default: None
+        random number generator used for shuffling throughout the training;
+        if equal to None, data will not be shuffled
+
+    file_suffix: str, default: None
+        suffix added to the logfile name and the filename of the model that
+        will be saved; if None, defaults to "main"
+
+    load : bool, default: False
+        if True, tries to initialise the model by loading a model according
+        to load_file_name
+
+    load_file_name: str, default: None
+        file name from which to load the model; needs to be specified whenever
+        load is set to True
+
+    **w_dist_per_iter: bool, default: False
+        if True, the dictionary returned by training method contains a list of the 
+        Wasserstein distances between true data and generated events for every 
+        iteration (computed in the discriminator training step)
+
+    **dim_particle: int, default: 3
+        dimension of the particle space, default 3 are [p_t, eta, phi]
+
+    **dim_global: int, default: 10
+        dimension of the global variable space within the networks
+
+    **num_epic_layers_gen: int, default: 6
+        number of EPiC-layers in the generator
+
+    **num_epic_layers_dis: int, default: 3
+        number of EPiC-layers in the discriminator
+
+    **norm_sigma: float, default: 5.
+        used to normalise data to this std
+
+    **beta_1: float, default: 0.9
+        beta_1 parameter of the (Adam) optimizers
     """
 
     def __init__(self, dataset_name, batch_size = 128, rng = None, file_suffix = None, load = False, load_file_name = None, **kwargs):
-        """Class constructor.
-
+        """
         Arguments
         --------------
         dataset_name: str
@@ -106,7 +157,7 @@ class TrainableModel:
         self.file_suffix = file_suffix
 
         try:
-            self.file_name_suffix = self.dataset_name + self.file_suffix
+            self.file_name_suffix = self.dataset_name + "_" + self.file_suffix
         except TypeError:
             print("file_suffix should be a string")
             sys.exit()
@@ -175,7 +226,7 @@ class TrainableModel:
 
         log_folder = "./logbooks"
 
-        logfile_name = "logbook_training_" + self.file_name_suffix + ".log"
+        logfile_name = "logbook_" + self.file_name_suffix + ".log"
 
         logging.basicConfig(format = '%(asctime)s[%(levelname)s] %(funcName)s: %(message)s',
                                   datefmt = '%d/%m/%Y %I:%M:%S %p',
@@ -209,7 +260,7 @@ class TrainableModel:
         """This function performs the actual training of the specified model.
         As optimizers for both generator and discriminator Adam is used. The 
         returns are contained in a dictionary with the results specified here
-        being the keys.
+        being the keys (as strings).
 
         Arguments
         -----------
@@ -224,11 +275,15 @@ class TrainableModel:
         save_result_dict: bool, default: False
             if True, dictionary containing results is stored to a .pkl-file with
             name dataset_name + "_training_" + file_suffix in folder saved_models. Differing file_suffix
-            can be specified with **save_file_suffix
+            can be specified with keyword 'save_file_suffix'. Differing folder
+            can be specified with keyword 'dict_save_folder'.
 
         **save_file_suffix: str, default: file_suffix (specified in object initialisation)
             dictionary containing results will be stored to .pkl-file with name
             dataset_name + "_training_" + save_file_suffix
+        
+        **dict_save_folder: str, default: "saved_models"
+            folder where to store the result dictionary
 
         **lr_gen: float, default: 1e-4
             sets the learning rate of the generator
@@ -261,20 +316,22 @@ class TrainableModel:
         Returns
         -----------
 
-        best_w_distance: float
-            Wasserstein distance score on the test set for the best epoch
+        result_dict: dict
+            dictionary with the following keys and values:
+                best_w_distance: float
+                    Wasserstein distance score on the test set for the best epoch
 
-        best_epoch: int
-            epoch for which the Wasserstein score on the validation set was lowest
+                best_epoch: int
+                    epoch for which the Wasserstein score on the validation set was lowest
 
-        mean_loss_dis_list: list
-            list of all the average loss values of the discriminator training
+                mean_loss_dis_list: list
+                    list of all the average loss values of the discriminator training
 
-        mean_loss_gen_list: list
-            list of all the average loss values of the generator training
+                mean_loss_gen_list: list
+                    list of all the average loss values of the generator training
 
-        w_dist_list: list
-            list of all the Wasserstein distance scores on the validation set
+                w_dist_list: list
+                    list of all the Wasserstein distance scores on the validation set
 
         """
 
@@ -350,12 +407,12 @@ class TrainableModel:
 
             data = batch.to(self.device)
             #this might be smaller than self.batch_size
-            local_batch_size = data.size(0)
-
+            
             #Discriminator training
-            self.discriminator_training(data, local_batch_size, loss = loss)
+            self.discriminator_training(data, loss = loss)
 
             #generator training
+            local_batch_size = data.size(0)
             self.generator_training(local_batch_size, loss = loss)
 
         total_time = time.time() - start
@@ -386,7 +443,38 @@ class TrainableModel:
 
 
     def validation_loop(self, n_tot_generation, runs, batch_size_gen, set_min_pt, order_by_pt, normalise_data, center_gen):
-        """Performs a single validation loop
+        """Performs a single validation loop, i.e.creates n_tot_generation fake events and computes
+        the Wasserstein distance between the mass distributions of the validation set and an equal
+        amount of fake events 'runs' times (for different fake samples). The validation score is the
+        mean over the values computed. If it is lower than the previously lowest validation score, 
+        the epoch is accepted as the new best epoch and the same computation is repeated using the
+        test instead of the validation set. The resulting score is stored.
+
+
+        Arguments
+        -----------
+
+        n_tot_generation: int
+            number of samples generated for the validation step
+
+        runs: int
+            number of comparison runs for the validation step
+            make sure n_tot_generation/runs is larger than the length of validation and test set
+
+        batch_size_gen: int
+            batch size at which noise samples are passed through the generator
+
+        set_min_pt: bool
+            if True, sets p_t coordinates of generated events to minimum value found in training set
+
+        order_by_pt: bool, default: True
+            if True, orders particles by p_t
+
+        normalise_data: bool, default: True
+            if True, normalises generated events in validation to mean & std of training set
+
+        center_gen: bool, default: True
+            if True, centers the eta- and phi-coordinates of generated events in validation
         """
 
         w_distance = evaluation.compute_wasserstein_distance(self.generator, self.val_set, self.kde,
@@ -446,7 +534,7 @@ class TrainableModel:
 
 
 
-    def discriminator_training(self, data, local_batch_size, loss = "BCE"):
+    def discriminator_training(self, data, loss = "BCE"):
         """This function performs the discriminator training
 
         Arguments
@@ -464,6 +552,8 @@ class TrainableModel:
             defines which loss to use, either binary cross entropy ("BCE") or
             least-squares-GAN loss ("LS-GAN")
         """
+
+        local_batch_size = int(data.size(0))
 
         self.discriminator.train()
         self.generator.eval()
@@ -567,7 +657,8 @@ class TrainableModel:
 
 
     def evaluation(self, make_plots = True, save_plots = True, save_result_dict = False, **kwargs):
-        """Computes the evaluation scores and optionally the evaluation plots.
+        """Computes the evaluation scores and optionally the evaluation plots that are given in 
+        the EPiC-GAN paper.
 
         Arguments
         -------------
@@ -613,6 +704,20 @@ class TrainableModel:
         **save_file_name: str, default: dataset_name + file_suffix (both specified in initialisation)
             file name to which result dictionary and/or plots will be stored
 
+        Returns
+        ---------
+
+        result_dict: dict
+            dictionary containing the evaluation scores, keys: "w_mass_mean", "w_mass_std", 
+            "w_coords_mean", "w_coords_std", "w_efps_mean", "w_efps_std"
+            they refer to mean and standard deviation of the Wasserstein distances between real and
+            generated events using the mass distribution, the particle feature distributions p_t,
+            eta, phi (mean over those) and the distributions of the energyflow polynomials (mean
+            over those, see https://energyflow.network/docs/efp/)
+
+        fig: matplotlib.figure, optional
+            the evaluation plots
+
         """
 
         if save_plots and not make_plots:
@@ -638,6 +743,10 @@ class TrainableModel:
                         min_pt = self.train_set_mins[0], center_gen = center_gen,
                         normalise_data = normalise_data, means = self.train_set_means,
                         stds = self.train_set_stds, norm_sigma = self.norm_sigma, device = self.device)
+        
+        if order_by_pt:
+            #is performed already in generation_loop for fake samples
+            self.test_set = utils.order_array_pt(self.test_set)
         
         if make_plots:
             result_dict, fig = evaluate_performance.evaluation_scores_plots(self.test_set, generated_events, runs, make_plots = make_plots, 

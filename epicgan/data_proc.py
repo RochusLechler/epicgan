@@ -369,7 +369,25 @@ def get_noise(n_points, batch_size = 128, dim_global = 10, dim_particle = 3, rng
 
 
 class PreparedDataset(IterableDataset):
-    """A class preparing the dataset for training.
+    """A class preparing the dataset for training. The batches defined in method define_batches()
+    contain events of equal effective particle multiplicity n_eff, i.e. equal number of particles 
+    that are not zero-padded. The __iter__-method was overrode s.t. if rng is given the batches are 
+    yielded in random order and after each cycle the dataset is reshuffled and the batches are re-
+    defined. If rng is None, the batches are yielded in ascending order in n_eff and for each cycle 
+    the same batches are yielded in the same order.
+
+    Arguments
+    ------------
+
+    dataset: np.array
+        dataset over which to iterate
+
+    batch_size: int, default: 128
+        batch size to be returned by an associated iterator
+
+    rng: np.random.Generator, default: None
+        random number generator used for shuffling; if equal to None, data
+        will not be shuffled
     """
 
     def __init__(self, dataset, batch_size = 128, rng = None):
@@ -402,7 +420,7 @@ class PreparedDataset(IterableDataset):
         self.batches_defined = False
 
     def __getitem__(self, index):
-        """index refers to a batch
+        """index refers to a batch.
         """
 
         if not self.batches_defined:
@@ -419,7 +437,7 @@ class PreparedDataset(IterableDataset):
         epoch given the specified batch size.
         Note that training is performed on batches each containing jets with equal
         number of particles with p_t != 0, meaning there can (and most likely will)
-        be more than one batch of batch size < self.batch_size.
+        be more than one batch of batch size < self.batch_size. 
 
         Returns
         -----------

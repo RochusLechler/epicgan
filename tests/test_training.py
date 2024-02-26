@@ -61,7 +61,7 @@ class TestTraining(unittest.TestCase):
         batch = Tensor(self.model.dataset[0])
         batch_size = batch.shape[0]
 
-        self.model.discriminator_training(batch, batch_size)
+        self.model.discriminator_training(batch)
         self.model.generator_training(batch_size)
 
     def test_validation_step(self):
