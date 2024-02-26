@@ -7,8 +7,7 @@ import unittest
 
 import numpy as np
 from torch.optim import Adam
-from epicgan import models, utils
-import evaluate_performance
+from epicgan import models, utils, evaluate_performance
 
 
 

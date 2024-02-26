@@ -6,10 +6,7 @@ import unittest
 import numpy as np
 from torch import Tensor
 
-import training
-
-from epicgan import data_proc
-import evaluate_performance
+from epicgan import training, evaluate_performance
 
 
 class TestTraining(unittest.TestCase):
