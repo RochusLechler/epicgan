@@ -18,8 +18,8 @@ def compute_wasserstein_distance(network, data_set, kde, batch_size_gen = 500,
                     n_tot_generation = 300000, dim_global = 10, dim_particle = 3,
                     rng = None, set_min_pt = True, min_pt = 0, center_gen = True,
                     order_by_pt = True,
-                    inv_normalise_data = True, inv_means = np.zeros(3), inv_stds = np.ones(3),
-                    inv_norm_sigma = 1, runs = 10, device = "cuda"):
+                    normalise_data = True, means = np.zeros(3), stds = np.ones(3),
+                    norm_sigma = 1, runs = 10, device = "cuda"):
     """Computes the Wasserstein distance between masses of the jets of the
     given dataset and generated jets. The return is the mean value of the
     Wasserstein distances for 'runs' number of generated jet datasets.
@@ -68,18 +68,18 @@ def compute_wasserstein_distance(network, data_set, kde, batch_size_gen = 500,
         if True, the particles within each generated fake jet will be ordered by
         p_t in descending order
 
-    inv_normalise_data: bool, default: True
+    normalise_data: bool, default: True
         if True, the generated events will be renormalised to have the statistical
         properties of the training set
 
-    inv_means: list or np.array, default: np.zeros(3)
+    means: list or np.array, default: np.zeros(3)
         mean value for each particle feature to which to renormalise the generated events
 
-    inv_stds: list or np.array, default: np.ones(3)
+    stds: list or np.array, default: np.ones(3)
         standard deviation value for each particle feature to which to renormalise
         the generated events
 
-    inv_norm_sigma: float or int, default: 1
+    norm_sigma: float or int, default: 1
         std-value to which the real input data was normalised
 
     runs: int, default: 10
@@ -105,8 +105,8 @@ def compute_wasserstein_distance(network, data_set, kde, batch_size_gen = 500,
                         dim_global = dim_global, dim_particle = dim_particle, rng = rng,
                         order_by_pt = order_by_pt, set_min_pt = set_min_pt,
                         min_pt = min_pt, center_gen = center_gen,
-                        inv_normalise_data = inv_normalise_data, inv_means = inv_means,
-                        inv_stds = inv_stds, inv_norm_sigma = inv_norm_sigma, device = device)
+                        normalise_data = normalise_data, means = means,
+                        stds = stds, norm_sigma = norm_sigma, device = device)
 
 
     #order also real data
@@ -135,8 +135,8 @@ def compute_wasserstein_distance(network, data_set, kde, batch_size_gen = 500,
 def generation_loop(network, n_points, kde, batch_size = 500, n_tot_generation = 300000,
                     dim_global = 10, dim_particle = 3, rng = None, order_by_pt = True,
                     set_min_pt = True, min_pt = 0, center_gen = True,
-                    inv_normalise_data = True, inv_means = np.zeros(3), inv_stds = np.ones(3),
-                    inv_norm_sigma = 1, device = "cuda"):
+                    normalise_data = True, means = np.zeros(3), stds = np.ones(3),
+                    norm_sigma = 1, device = "cuda"):
     """This function generates simulated events mimicking the appearance of the
     JetNet datasets.
     First, a distribution of n_eff, which is the number of particles per jet
@@ -200,18 +200,18 @@ def generation_loop(network, n_points, kde, batch_size = 500, n_tot_generation =
         if True, the eta- and phi-coordinates of the generated events will be
         centered
 
-    inv_normalise_data: bool, default: True
+    normalise_data: bool, default: True
         if True, the generated events will be renormalised to have the statistical
         properties of the training set
 
-    inv_means: list or np.array, default: np.zeros(3)
+    means: list or np.array, default: np.zeros(3)
         mean value for each particle feature to which to renormalise the generated events
 
-    inv_stds: list or np.array, default: np.ones(3)
+    stds: list or np.array, default: np.ones(3)
         standard deviation value for each particle feature to which to renormalise
         the generated events
 
-    inv_norm_sigma: float or int, default: 1
+    norm_sigma: float or int, default: 1
         std-value to which the real input data was normalised
 
     device: str, default: "cuda"
@@ -265,8 +265,8 @@ def generation_loop(network, n_points, kde, batch_size = 500, n_tot_generation =
             #interested in the resulting events)
             gen_out_no_pad = network(noise_particle, noise_global).detach().cpu().numpy()
 
-            if inv_normalise_data:
-                gen_out_no_pad = data_proc.inverse_normalise_dataset(gen_out_no_pad, inv_means, inv_stds, norm_sigma = inv_norm_sigma)
+            if normalise_data:
+                gen_out_no_pad = data_proc.inverse_normalise_dataset(gen_out_no_pad, means, stds, norm_sigma = norm_sigma)
 
             #zero-padding to reobtain total particle number n_points
             gen_out = np.zeros((gen_out_no_pad.shape[0], n_points, dim_particle))

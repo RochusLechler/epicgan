@@ -8,16 +8,18 @@ import os
 import sys
 import logging
 import time
-import tqdm
 import pickle
+import tqdm
+
 
 import torch
 from epicgan import utils, data_proc, models, evaluation, performance_metrics
+import evaluate_performance
 
 
 
 class TrainableModel:
-    """A class incorporating the GAN model. It has a member function that
+    """A class incorporating the GAN model. It has a method that
     performs the training.
     When running the training, ensure the place from where you run the training
     has the following folders and contents:
@@ -27,7 +29,7 @@ class TrainableModel:
     """
 
     def __init__(self, dataset_name, batch_size = 128, rng = None, file_suffix = None, load = False, load_file_name = None, **kwargs):
-        """Class constructor
+        """Class constructor.
 
         Arguments
         --------------
@@ -116,23 +118,23 @@ class TrainableModel:
         self.real_label = 1.
         self.fake_label = 0.
         #load the dataset
-        self.dataset = data_proc.get_dataset(self.dataset_name)
-        self.n_points = self.dataset.shape[1]
+        dataset = data_proc.get_dataset(self.dataset_name)
+        self.n_points = dataset.shape[1]
         #split into sets according to splits = [0.7, 0.15, 0.15]
-        self.train_set, self.val_set, self.test_set = data_proc.split_dataset(self.dataset, rng = self.rng)
+        train_set, self.val_set, self.test_set = data_proc.split_dataset(dataset, rng = self.rng)
 
         #load the precomputed kde for this dataset
         self.kde = data_proc.get_kde(self.dataset_name)
 
         #get the properties needed for normalisation
-        self.train_set_means, self.train_set_stds, self.train_set_mins, self.train_set_maxs = data_proc.dataset_properties(self.train_set)
+        self.train_set_means, self.train_set_stds, self.train_set_mins, _ = data_proc.dataset_properties(train_set)
 
         #initialise the models
         self.generator = models.Generator(input_size_p = self.dim_particle,
-                     input_size_g = self.dim_global, hid_size_p = 128, hid_size_g = 10,
+                     input_size_g = self.dim_global, hid_size_p = 128, hid_size_g = self.dim_global,
                      hid_size_g_in = 128, num_epic_layers = num_epic_layers_gen)
         self.discriminator = models.Discriminator(input_size_p = self.dim_particle,
-                     hid_size_p = 128, hid_size_g = 10, hid_size_g_in = 128, 
+                     hid_size_p = 128, hid_size_g = self.dim_global, hid_size_g_in = 128, 
                      num_epic_layers = num_epic_layers_dis)
 
         self.generator.to(self.device)
@@ -150,7 +152,7 @@ class TrainableModel:
 
 
         #use custom class to prepare dataset
-        self.dataset = data_proc.PreparedDataset(self.train_set, batch_size = self.batch_size, rng = self.rng)
+        self.dataset = data_proc.PreparedDataset(train_set, batch_size = self.batch_size, rng = self.rng)
         self.num_iter_per_ep = self.dataset.num_iter_per_ep()
 
         self.epoch_counter = 0
@@ -250,7 +252,7 @@ class TrainableModel:
         **order_by_pt: bool, default: True
             if True, orders particles by p_t in validation loops
 
-        **inv_normalise_data: bool, default: True
+        **normalise_data: bool, default: True
             if True, normalises generated events in validation to mean & std of training set
 
         **center_gen: bool, default: True
@@ -297,7 +299,7 @@ class TrainableModel:
 
         order_by_pt = kwargs.get("order_by_pt", True)
 
-        inv_normalise_data = kwargs.get("inv_normalise_data", True)
+        normalise_data = kwargs.get("normalise_data", True)
 
         center_gen = kwargs.get("center_gen", True)
 
@@ -333,7 +335,7 @@ class TrainableModel:
                 self.loss_dis = 0
                 self.loss_gen = 0
 
-                self.validation_loop(n_tot_generation, runs, batch_size_gen, set_min_pt, order_by_pt, inv_normalise_data, center_gen)
+                self.validation_loop(n_tot_generation, runs, batch_size_gen, set_min_pt, order_by_pt, normalise_data, center_gen)
 
                 self.epoch_counter += 1
 
@@ -343,7 +345,7 @@ class TrainableModel:
                 iterator.close()
                 break
 
-            if inv_normalise_data:
+            if normalise_data:
                 batch = data_proc.normalise_dataset(batch, self.train_set_means, self.train_set_stds, norm_sigma = self.norm_sigma)
 
             data = batch.to(self.device)
@@ -374,16 +376,16 @@ class TrainableModel:
         if save_result_dict:
             folder = "saved_models"
             path = os.path.join(folder, self.dataset_name + "_training_" + save_file_suffix + ".pkl")
-            f = open(path, "wb")
-            pickle.dump(results, f)
-            f.close()
+            with open(path, "wb") as f:
+                pickle.dump(results, f)
+                f.close()
 
         return results
 
 
 
 
-    def validation_loop(self, n_tot_generation, runs, batch_size_gen, set_min_pt, order_by_pt, inv_normalise_data, center_gen):
+    def validation_loop(self, n_tot_generation, runs, batch_size_gen, set_min_pt, order_by_pt, normalise_data, center_gen):
         """Performs a single validation loop
         """
 
@@ -392,9 +394,9 @@ class TrainableModel:
                         dim_global = self.dim_global, dim_particle = self.dim_particle,
                         rng = self.rng, set_min_pt = set_min_pt, min_pt = self.train_set_mins[0],
                         center_gen = center_gen, order_by_pt = order_by_pt,
-                        inv_normalise_data = inv_normalise_data,
-                        inv_means = self.train_set_means, inv_stds = self.train_set_stds,
-                        inv_norm_sigma = self.norm_sigma, runs = runs, device = self.device)
+                        normalise_data = normalise_data,
+                        means = self.train_set_means, stds = self.train_set_stds,
+                        norm_sigma = self.norm_sigma, runs = runs, device = self.device)
 
         self.logger.info("Wasserstein-distance for epoch %d is %.5f", int(self.epoch_counter+1), w_distance)
 
@@ -408,9 +410,9 @@ class TrainableModel:
                             dim_global = self.dim_global, dim_particle = self.dim_particle,
                             rng = self.rng, set_min_pt = set_min_pt, min_pt = self.train_set_mins[0],
                             center_gen = center_gen, order_by_pt = order_by_pt,
-                            inv_normalise_data = inv_normalise_data,
-                            inv_means = self.train_set_means, inv_stds = self.train_set_stds,
-                            inv_norm_sigma = self.norm_sigma, runs = runs, device = self.device)
+                            normalise_data = normalise_data,
+                            means = self.train_set_means, stds = self.train_set_stds,
+                            norm_sigma = self.norm_sigma, runs = runs, device = self.device)
             self.w_dist_list.append(self.test_w_distance)
 
             utils.save_model(self.generator, self.discriminator, self.optimizer_g, self.optimizer_d,
@@ -429,9 +431,9 @@ class TrainableModel:
                                 dim_global = self.dim_global, dim_particle = self.dim_particle,
                                 rng = self.rng, set_min_pt = set_min_pt, min_pt = self.train_set_mins[0],
                                 center_gen = center_gen, order_by_pt = order_by_pt,
-                                inv_normalise_data = inv_normalise_data,
-                                inv_means = self.train_set_means, inv_stds = self.train_set_stds,
-                                inv_norm_sigma = self.norm_sigma, runs = runs, device = self.device)
+                                normalise_data = normalise_data,
+                                means = self.train_set_means, stds = self.train_set_stds,
+                                norm_sigma = self.norm_sigma, runs = runs, device = self.device)
                 self.w_dist_list.append(self.test_w_distance)
 
 
@@ -562,6 +564,93 @@ class TrainableModel:
         #gradient and update
         gen_loss.backward()
         self.optimizer_g.step()
+
+
+    def evaluation(self, make_plots = True, save_plots = True, save_result_dict = False, **kwargs):
+        """Computes the evaluation scores and optionally the evaluation plots.
+
+        Arguments
+        -------------
+
+        make_plots: bool, default: True
+            if True, evaluation plots are made
+
+        save_plots: bool, default: True
+            if True, evaluation plots are saved to .png-file save_file_name in folder "saved_plots"
+
+        save_result_dict: bool  default: False
+            if True, result dictionary is saved to .pkl-file named "eval_scores" + save_file_name
+            in folder dict_save_folder (can be specified as kwarg)
+
+        **batch_size_gen: int, default: 500
+            batch size at which noise samples are passed through the generator
+
+        **n_tot_generation: int, default: 300000
+            number of samples generated for each validation step
+
+        **runs: int, default: 10
+            number of comparison runs for each validation step
+            make sure n_tot_generation/runs is larger than the length of validation and test set
+
+        **set_min_pt: bool, default: True
+            if True, sets p_t coordinates of generated events to minimum value found in training set
+
+        **order_by_pt: bool, default: True
+            if True, orders particles by p_t in validation loops
+
+        **normalise_data: bool, default: True
+            if True, normalises generated events in validation to mean & std of training set
+
+        **center_gen: bool, default: True
+            if True, centers the eta- and phi-coordinates of generated events in validation
+
+        **dict_save_folder: str, default: "saved_models"
+            folder where to store the result dictionary
+
+        **name_plots: str, default: dataset_name (specified in initialisation)
+            label that will appear in the plots
+
+        **save_file_name: str, default: dataset_name + file_suffix (both specified in initialisation)
+            file name to which result dictionary and/or plots will be stored
+
+        """
+
+        if save_plots and not make_plots:
+            self.logger.warning("""save_plots was detected True, although no plots are made; if you
+                                want to make plots and save them, set make_plots to True""")
+
+        batch_size_gen = kwargs.get("batch_size_gen", 500)
+        n_tot_generation = kwargs.get("n_tot_generation", 300000)
+        runs = kwargs.get("runs", 10)
+        set_min_pt = kwargs.get("set_min_pt", True)
+        order_by_pt = kwargs.get("order_by_pt", True)
+        normalise_data = kwargs.get("normalise_data", True)
+        center_gen = kwargs.get("center_gen", True)
+        dict_save_folder = kwargs.get("dict_save_folder", "saved_models")
+        name_plots = kwargs.get("name_plots", self.dataset_name)
+        save_file_name = kwargs.get("save_file_name", self.file_name_suffix)
+
+
+        generated_events = evaluation.generation_loop(self.generator, self.n_points, self.kde,
+                        batch_size = batch_size_gen, n_tot_generation = n_tot_generation,
+                        dim_global = self.dim_global, dim_particle = self.dim_particle, rng = self.rng,
+                        order_by_pt = order_by_pt, set_min_pt = set_min_pt,
+                        min_pt = self.train_set_mins[0], center_gen = center_gen,
+                        normalise_data = normalise_data, means = self.train_set_means,
+                        stds = self.train_set_stds, norm_sigma = self.norm_sigma, device = self.device)
+        
+        if make_plots:
+            result_dict, fig = evaluate_performance.evaluation_scores_plots(self.test_set, generated_events, runs, make_plots = make_plots, 
+                                                name_plots = name_plots, save_plots = save_plots, save_result_dict = save_result_dict, 
+                                                save_file_name = save_file_name, rng = self.rng, dict_save_folder = dict_save_folder)
+        
+            return result_dict, fig
+        
+        result_dict = evaluate_performance.evaluation_scores_plots(self.test_set, generated_events, runs, make_plots = make_plots, 
+                                                save_result_dict = save_result_dict, save_file_name = save_file_name, rng = self.rng, 
+                                                dict_save_folder = dict_save_folder)
+        
+        return result_dict
 
 
 

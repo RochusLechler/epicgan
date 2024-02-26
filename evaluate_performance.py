@@ -22,8 +22,10 @@ from epicgan import utils, data_proc, models, evaluation, performance_metrics
 
 
 def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, save_plots = True, save_result_dict = False, save_file_name = None, rng = None, **kwargs):
-    """Function that evaluates a (trained) network. Has an option to make the plots
+    """Function that evaluates a stored network. It has an option to make the plots
     that are in the original EPiC-GAN paper and save them to a .png-file.
+    If the network structure differs from the default, make sure to give the
+    respective kwargs.
     When running the evaluation, ensure the place from where you run the training
     has the following folders and contents:
     1. The specified dataset is stored in folder 'JetNet_datasets' in '.hdf5'-format
@@ -96,7 +98,7 @@ def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, 
     **order_by_pt: bool, default: True
         If True, orders particles by p_t in generated events and test data.
 
-    **inv_normalise_data: bool, default: True
+    **normalise_data: bool, default: True
         If True, normalises generated events to mean & std of training set
 
     **center_gen: bool, default: True
@@ -131,7 +133,7 @@ def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, 
 
     order_by_pt = kwargs.get("order_by_pt", True)
 
-    inv_normalise_data = kwargs.get("inv_normalise_data", True)
+    normalise_data = kwargs.get("normalise_data", True)
 
     center_gen = kwargs.get("center_gen", True)
 
@@ -192,27 +194,54 @@ def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, 
                         n_tot_generation = n_tot_generation, dim_global = dim_global,
                         dim_particle = dim_particle, rng = rng, order_by_pt = order_by_pt,
                         set_min_pt = set_min_pt, min_pt = train_set_mins[0], center_gen = center_gen,
-                        inv_normalise_data = inv_normalise_data, inv_means = train_set_means,
-                        inv_stds = train_set_stds, inv_norm_sigma = norm_sigma, device = device)
+                        normalise_data = normalise_data, means = train_set_means,
+                        stds = train_set_stds, norm_sigma = norm_sigma, device = device)
 
     if order_by_pt:
         #is performed already in generation_loop for fake samples
         test_set = utils.order_array_pt(test_set)
 
+    save_file_name = dataset_name + "_evaluation_" + save_file_name + ".pkl"
+    if make_plots:
+        result_dict, fig = evaluation_scores_plots(test_set, generated_events, runs = runs, name_plots = dataset_name, save_plots = save_plots, 
+                                                   save_result_dict = save_result_dict, save_file_name = save_file_name, rng = rng)
+        return result_dict, fig
 
-    len_test_set = len(test_set)
+    result_dict = evaluation_scores_plots(test_set, generated_events, runs = runs, make_plots = False, save_result_dict = save_result_dict, rng = rng)
+    return result_dict
 
-    w_mass_mean, w_mass_std = performance_metrics.wasserstein_mass(test_set,
-                                generated_events, num_samples = len_test_set, runs = runs,
+
+
+
+def evaluation_scores_plots(real_jets, fake_jets, runs, make_plots = True, name_plots = None, save_plots = True, save_result_dict = False, 
+                      save_file_name = None, rng = None, **kwargs):
+    """
+
+
+    Arguments
+    ----------
+
+
+
+    **dict_save_folder: str, default: "saved_models"
+        folder where to store the result dictionary
+    """
+
+    logger = logging.getLogger("main")
+
+    len_real_jets = len(real_jets)
+
+    w_mass_mean, w_mass_std = performance_metrics.wasserstein_mass(real_jets,
+                                fake_jets, num_samples = len_real_jets, runs = runs,
                                 return_std = True, rng = rng)
 
-    w_coords_mean, w_coords_std = performance_metrics.wasserstein_coords(test_set,
-                    generated_events, exclude_zeros = True, num_samples = len_test_set,
+    w_coords_mean, w_coords_std = performance_metrics.wasserstein_coords(real_jets,
+                    fake_jets, exclude_zeros = True, num_samples = len_real_jets,
                     runs = runs, avg_over_features = True, return_std = True,
                     rng = rng)
 
-    w_efp_mean, w_efp_std = performance_metrics.wasserstein_efps(test_set,
-                    generated_events, num_samples = len_test_set, runs = runs,
+    w_efp_mean, w_efp_std = performance_metrics.wasserstein_efps(real_jets,
+                    fake_jets, num_samples = len_real_jets, runs = runs,
                     avg_over_efps = True, return_std = True, rng = rng)
 
     #commented lines calculate FPND score; Python version <= 3.10, torch-cluster required
@@ -242,29 +271,40 @@ def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, 
     #    result_dict["fpnd_mean"] = fpnd_mean
     #    result_dict["fpnd_std"]  = fpnd_std
 
+
     if save_result_dict:
-        folder = "saved_models"
+        if save_file_name is None:
+            logger.critical("please specify save_file_name, if you want to save the results")
+            sys.exit()
+
+        folder = kwargs.get("dict_save_folder", "saved_models")
         try:
-            path = os.path.join(folder, dataset_name + "_evaluation_" + save_file_name + ".pkl")
+            path = os.path.join(folder, "eval_scores_" + save_file_name + ".pkl")
         except TypeError as e:
             logger.exception(e)
-            logger.warning("""please specify a string on where to save the results,
+            logger.warning("""please specify a string where to save the results,
                             if you want to save them; result dictionary will be returned,
                             but not saved""")
-        f = open(path, "wb")
-        pickle.dump(result_dict, f)
-        f.close()
+        with open(path, "wb") as f:
+            pickle.dump(result_dict, f)
+            f.close()
 
     if make_plots:
-        folder = "./saved_plots"
-        fig = plot_overview(test_set, dataset_name, generated_events)
+        if name_plots is None:
+            name_plots = "main"
+        fig = plot_overview(real_jets, name_plots, fake_jets)
 
         if save_plots:
+            if save_file_name is None:
+                logger.critical("please specify save_file_name, if you want to save the plots")
+                sys.exit()
+
+            folder = "saved_plots"
             try:
                 plt.savefig(os.path.join(folder, save_file_name + ".png"))
             except TypeError as e:
                 logger.exception(e)
-                logger.warning("""please specify a string on where to save the plots,
+                logger.warning("""please specify a string where to save the plots,
                                 if you want to save them; figure will be returned,
                                 but not saved""")
 
@@ -282,8 +322,8 @@ def plot_overview(test_set, dataset_name, generated_events = None, generator = N
                     kde = None, batch_size_gen = 500, n_tot_generation = 300000,
                     dim_global = 10, dim_particle = 3, rng = None, order_by_pt = True,
                     set_min_pt = True, min_pt = 0, center_gen = True,
-                    inv_normalise_data = True, inv_means = np.zeros(3), inv_stds = np.ones(3),
-                    inv_norm_sigma = 1, device = "cuda"):
+                    normalise_data = True, means = np.zeros(3), stds = np.ones(3),
+                    norm_sigma = 1, device = "cuda"):
     """This function makes the 9 plots that are given for each dataset in the original EPiC-GAN paper.
     It does NOT save them.
 
@@ -343,18 +383,18 @@ def plot_overview(test_set, dataset_name, generated_events = None, generator = N
         if True, the eta- and phi-coordinates of the generated events will be
         centered
 
-    inv_normalise_data: bool, default: True
+    normalise_data: bool, default: True
         if True, the generated events will be renormalised to have the statistical
         properties of the training set
 
-    inv_means: list or np.array, default: np.zeros(3)
+    means: list or np.array, default: np.zeros(3)
         mean value for each particle feature to which to renormalise the generated events
 
-    inv_stds: list or np.array, default: np.ones(3)
+    stds: list or np.array, default: np.ones(3)
         standard deviation value for each particle feature to which to renormalise
         the generated events
 
-    inv_norm_sigma: float or int, default: 1
+    norm_sigma: float or int, default: 1
         std-value to which the real input data was normalised
 
     device: str, default: "cuda"
@@ -379,8 +419,8 @@ def plot_overview(test_set, dataset_name, generated_events = None, generator = N
         gen_ary = evaluation.generation_loop(generator, n_points, kde, batch_size = batch_size_gen, n_tot_generation = n_tot_generation,
                             dim_global = dim_global, dim_particle = dim_particle, rng = rng, order_by_pt = order_by_pt,
                             set_min_pt = set_min_pt, min_pt = min_pt, center_gen = center_gen,
-                            inv_normalise_data = inv_normalise_data, inv_means = inv_means, inv_stds = inv_stds,
-                            inv_norm_sigma = inv_norm_sigma, device = device)
+                            normalise_data = normalise_data, means = means, stds = stds,
+                            norm_sigma = norm_sigma, device = device)
         gen_ary = gen_ary[:len(test_set)]
 
         if order_by_pt:

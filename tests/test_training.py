@@ -49,6 +49,14 @@ class TestTraining(unittest.TestCase):
         if os.path.exists(path):
             os.remove(path)
 
+        path = "saved_models/eval_scores_testtest.pkl"
+        if os.path.exists(path):
+            os.remove(path)
+
+        path = "saved_plots/testtest.png"
+        if os.path.exists(path):
+            os.remove(path)
+
     def test_training_steps(self):
         batch = Tensor(self.model.dataset[0])
         batch_size = batch.shape[0]
@@ -58,11 +66,18 @@ class TestTraining(unittest.TestCase):
 
     def test_validation_step(self):
 
-        self.model.validation_loop(n_tot_generation = 200, runs = 5, batch_size_gen = 150, set_min_pt = True, order_by_pt = True, inv_normalise_data = True, center_gen = True)
+        self.model.validation_loop(n_tot_generation = 200, runs = 5, batch_size_gen = 150, 
+                            set_min_pt = True, order_by_pt = True, normalise_data = True, center_gen = True)
         self.model.epoch_counter += 1
-        self.model.validation_loop(n_tot_generation = 200, runs = 5, batch_size_gen = 150, set_min_pt = True, order_by_pt = True, inv_normalise_data = True, center_gen = True)
+        self.model.validation_loop(n_tot_generation = 200, runs = 5, batch_size_gen = 150, 
+                            set_min_pt = True, order_by_pt = True, normalise_data = True, center_gen = True)
 
     def test_training_loop(self):
 
         self.model.training(num_epochs = 1, save_result_dict = True, n_tot_generation = 200, runs = 5)
+
+    def test_evaluation_method(self):
+
+        self.model.evaluation(make_plots = True, save_plots = True, save_result_dict = True, 
+                              n_tot_generation = 200, runs = 5)
 
