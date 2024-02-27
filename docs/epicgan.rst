@@ -4,10 +4,18 @@ epicgan package
 Submodules
 ----------
 
-epicgan.calc\_kde module
+epicgan.training module
 ------------------------
 
-.. automodule:: epicgan.calc_kde
+.. automodule:: epicgan.training
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+epicgan.evaluate_performance module
+-----------------------------------
+
+.. automodule:: epicgan.evaluate_performance
    :members:
    :undoc-members:
    :show-inheritance:
@@ -16,6 +24,14 @@ epicgan.data\_proc module
 -------------------------
 
 .. automodule:: epicgan.data_proc
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+epicgan.performance_metrics module
+----------------------------------
+
+.. automodule:: epicgan.performance_metrics
    :members:
    :undoc-members:
    :show-inheritance:
