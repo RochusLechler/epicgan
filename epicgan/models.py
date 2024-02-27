@@ -14,26 +14,24 @@ from torch.nn.utils.parametrizations import weight_norm
 
 class EpicGanLayer(nn.Module):
     """This class refers to a generic EPiC-GAN-layer as defined in the paper
-    with variable input, output and hidden size.
+    with variable input, output and hidden size. No default values given, because this constructor 
+    is only to be called from the constructors of the generator and discriminator.
+
+    Arguments
+    -----------
+
+    hid_size_p: int
+        hidden dimension of the particle space
+
+    hid_size_g: int
+        hidden dimension of the global space
+
+    hid_size_g_in: in
+        dimension of the hidden (aggregation) layer of the global space
     """
 
     def __init__(self, hid_size_p, hid_size_g, hid_size_g_in):
-        """No default values given, because this constructor is only to be called from
-        the constructors of the generator and discriminator.
 
-        Arguments
-        -----------
-
-        hid_size_p: int
-            hidden dimension of the particle space
-
-        hid_size_g: int
-            hidden dimension of the global space
-
-        hid_size_g_in: in
-            dimension of the hidden (aggregation) layer of the global space
-
-        """
         super(EpicGanLayer, self).__init__()
 
         self.hid_size_p = hid_size_p
@@ -98,35 +96,33 @@ class Generator(nn.Module):
     """Defines the generator of the GAN.
     Note that the two hidden sizes (p and g_in) are the same in the default
     structure (both 128).
+
+    Arguments
+    ------------
+
+    input_size_p: int, default: 3
+        dimension of the input particle space; equals number of particle features;
+        equals also the dimension of the output particle space
+    
+    input_size_g: int, default: 10
+        dimension of the input global space
+
+    hid_size_p: int, default: 128
+        hidden dimension of the particle space in the network
+
+    hid_size_g: int, default: 10
+        hidden dimension of the global space in the network
+
+    hid_size_g_in: int, default: 128
+        dimension of the hidden layer in the initial processing of the global space
+
+    num_epic_layers: int, default: 6
+        number of EPiC-layers stacked in series
     """
 
     def __init__(self, input_size_p = 3, input_size_g = 10,
                  hid_size_p = 128, hid_size_g = 10, hid_size_g_in = 128,
                  num_epic_layers = 6):
-        """Class constructor.
-
-        Arguments
-        ------------
-
-        input_size_p: int, default: 3
-            dimension of the input particle space; equals number of particle features;
-            equals also the dimension of the output particle space
-        
-        input_size_g: int, default: 10
-            dimension of the input global space
-
-        hid_size_p: int, default: 128
-            hidden dimension of the particle space in the network
-
-        hid_size_g: int, default: 10
-            hidden dimension of the global space in the network
-
-        hid_size_g_in: int, default: 128
-            dimension of the hidden layer in the initial processing of the global space
-
-        num_epic_layers: int, default: 6
-            number of EPiC-layers stacked in series 
-        """
 
         super(Generator, self).__init__()
 
@@ -193,29 +189,29 @@ class Generator(nn.Module):
 
 class Discriminator(nn.Module):
     """Defines the discriminator of the GAN. 
+
+    Arguments 
+    -----------
+
+    input_size_p: int, default: 3
+        dimension of the input particle space; equals number of particle features;
+
+    hid_size_p: int, default: 128
+        hidden dimension of the particle space in the network
+
+    hid_size_g: int, default: 10
+        hidden dimension of the global space in the network
+
+    hid_size_g_in: int, default: 128
+        dimension of the hidden layer in the initialisation of the global space
+
+    num_epic_layers: int, default: 3
+        number of EPiC-layers stacked in series
     """
 
     def __init__(self, input_size_p = 3, hid_size_p = 128,
                  hid_size_g = 10, hid_size_g_in = 128, num_epic_layers = 3):
-        """
-        Arguments 
-        -----------
-
-        input_size_p: int, default: 3
-            dimension of the input particle space; equals number of particle features;
-
-        hid_size_p: int, default: 128
-            hidden dimension of the particle space in the network
-
-        hid_size_g: int, default: 10
-            hidden dimension of the global space in the network
-
-        hid_size_g_in: int, default: 128
-            dimension of the hidden layer in the initialisation of the global space
-
-        num_epic_layers: int, default: 3
-            number of EPiC-layers stacked in series
-        """
+        
         super(Discriminator, self).__init__()
 
         self.input_size_p    = input_size_p
@@ -250,7 +246,6 @@ class Discriminator(nn.Module):
 
         p_data: torch.Tensor
             input data, either real or generated of shape [batch_size, n_eff, num_particle_features]
-
 
         Returns
         ----------

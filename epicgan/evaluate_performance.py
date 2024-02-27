@@ -33,7 +33,7 @@ def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, 
     2. There is a folder 'saved_models' where the model you want to load is stored
     3. There is a folder 'logbooks', the logfile will be stored here
 
-    Arguments:
+    Arguments
     -----------
 
     dataset_name:
@@ -207,7 +207,7 @@ def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, 
     except FileNotFoundError:
         print("could not find KDE, will compute it myself")
         kde = data_proc.compute_kde(dataset_name)
-        
+
     train_set_means, train_set_stds, train_set_mins, _ = data_proc.dataset_properties(train_set)
 
 
@@ -262,7 +262,7 @@ def evaluation_scores_plots(real_jets, fake_jets, runs, make_plots = True, name_
 
     save_result_dict: bool, default: False
         if True, dictionary containing results is stored to a .pkl-file with
-        name "eval_scores_" + save_file_name in folder saved_models. Folder can be
+        name "eval\_scores\_" + save_file_name in folder saved_models. Folder can be
         changed by specifying keyword 'dict_save_folder'.
 
     save_file_name: str, default: None
