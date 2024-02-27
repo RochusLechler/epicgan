@@ -21,7 +21,8 @@ from epicgan import utils, data_proc, models, evaluation, performance_metrics
 
 
 
-def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, save_plots = True, save_result_dict = False, save_file_name = None, rng = None, **kwargs):
+def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, save_plots = True, 
+                         save_result_dict = False, save_file_name = None, rng = None, **kwargs):
     """Function that evaluates a stored network. It has an option to make the plots
     that are in the original EPiC-GAN paper and save them to a .png-file.
     If the network structure differs from the default, make sure to give the
@@ -193,10 +194,20 @@ def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, 
 
 
     #get the dataset
-    dataset = data_proc.get_dataset(dataset_name)
+    try:
+        dataset = data_proc.get_dataset(dataset_name)
+    except FileNotFoundError:
+        print("the dataset you specified could not be found")
+        sys.exit()
+
     train_set, _, test_set = data_proc.split_dataset(dataset, rng = rng)
 
-    kde = data_proc.get_kde(dataset_name)
+    try:
+        kde = data_proc.get_kde(dataset_name)
+    except FileNotFoundError:
+        print("could not find KDE, will compute it myself")
+        kde = data_proc.compute_kde(dataset_name)
+        
     train_set_means, train_set_stds, train_set_mins, _ = data_proc.dataset_properties(train_set)
 
 

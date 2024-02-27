@@ -301,17 +301,43 @@ def get_kde(dataset_name):
     """
     path = datasets_folder + dataset_name + ".pkl"
 
-    try:
-        with open(path, "rb") as f:
-            kde = pickle.load(f)
     
+    with open(path, "rb") as f:
+        kde = pickle.load(f)
+
+    return kde
+
+
+def compute_kde(dataset_name):
+    """Computes the kernel density estimation of n_eff (number of particles
+    with nonzero p_t) for the given dataset
+
+    Arguments
+    ------------
+
+    dataset_name: str
+        specifies the dataset for which to load the kde
+
+    Returns
+    -------------
+
+    kde: scipy.stats.gaussian_kde
+        gaussian_kde-object containing the specified kde
+    """
+    try:
+        dataset = get_dataset(dataset_name)
     except FileNotFoundError as e:
         logger.exception(e)
-        logger.critical("could not find a KDE according to your dataset specification")
+        logger.critical("could not find a dataset according to your dataset")
 
         sys.exit()
 
+    save_path = datasets_folder + dataset_name
+
+    kde = utils.calc_kde(dataset, file_path = save_path)
+
     return kde
+
 
 
 def get_noise(n_points, batch_size = 128, dim_global = 10, dim_particle = 3, rng = None, device = "cuda"):

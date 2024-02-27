@@ -1,4 +1,4 @@
-"""Unit tests for the training class
+"""Unit tests for the training class.
 """
 
 import os
@@ -6,14 +6,16 @@ import unittest
 import numpy as np
 from torch import Tensor
 
-from epicgan import training, evaluate_performance
+from epicgan import training
 
 
 class TestTraining(unittest.TestCase):
-    """tests the implicit methods of the custom training class, as well 
+    """Tests the implicit methods of the custom training class, as well 
     as one full training loop including a validation step on a dummy
     dataset. In the setup, the dummy dataset is created, if it doesn't 
     exist already.
+    There might be a warning message that logscaling is not positive due to negative values, as the
+    dummy dataset is randomly created and therefore unphysical.
     """
 
     def setUp(self):
@@ -62,7 +64,6 @@ class TestTraining(unittest.TestCase):
         self.model.generator_training(batch_size)
 
     def test_validation_step(self):
-
         self.model.validation_loop(n_tot_generation = 200, runs = 5, batch_size_gen = 150, 
                             set_min_pt = True, order_by_pt = True, normalise_data = True, center_gen = True)
         self.model.epoch_counter += 1
@@ -70,11 +71,13 @@ class TestTraining(unittest.TestCase):
                             set_min_pt = True, order_by_pt = True, normalise_data = True, center_gen = True)
 
     def test_training_loop(self):
-
         self.model.training(num_epochs = 1, save_result_dict = True, n_tot_generation = 200, runs = 5)
 
     def test_evaluation_method(self):
-
-        self.model.evaluation(make_plots = True, save_plots = True, save_result_dict = True, 
+        self.model.evaluate(make_plots = True, save_plots = True, save_result_dict = True, 
                               n_tot_generation = 200, runs = 5)
+
+    def test_generation_method(self):
+        self.model.generate(250)
+
 

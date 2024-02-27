@@ -430,3 +430,45 @@ def load_model(generator, discriminator, optimizer_g, optimizer_d,
 
     logger.info("Model for %s loaded", file_name)
     return generator, discriminator, optimizer_g, optimizer_d
+
+
+
+
+def load_generator(generator, file_name, folder = "./saved_models", device = "cuda"):
+    """Loads a GAN-generator from a file that was created using the above function save_model
+
+    Arguments
+    ------------
+
+    generator: Generator
+        generator network of the GAN
+        
+    file_name: str
+        filename of the file to load
+
+    folder: str, default: "./saved_models"
+        folder where to search for the file
+
+    Returns
+    ------------
+
+    generator: Generator
+        generator network with the parameters saved in the specified file
+
+    """
+
+    path = os.path.join(folder, file_name + ".tar")
+    try:
+        model = torch.load(path, map_location = device)
+    except FileNotFoundError as e:
+        logger.exception(e)
+        logger.critical("""could not find the file you want to load, program will
+                        terminate""")
+
+        sys.exit()
+
+    generator.load_state_dict(model['generator_state'], strict = True)
+
+    return generator
+
+

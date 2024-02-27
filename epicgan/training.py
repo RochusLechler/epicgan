@@ -81,57 +81,6 @@ class TrainableModel:
     """
 
     def __init__(self, dataset_name, batch_size = 128, rng = None, file_suffix = None, load = False, load_file_name = None, **kwargs):
-        """
-        Arguments
-        --------------
-        dataset_name: str
-            dataset specification
-
-        n_points: int
-            number of particles per jet, either 30 or 150
-
-        batch_size: int, default: 128
-            batch size used for the training
-
-        rng: np.random.Generator, default: None
-            random number generator used for shuffling throughout the training;
-            if equal to None, data will not be shuffled
-
-        file_suffix: str, default: None
-            suffix added to the logfile name and the filename of the model that
-            will be saved; if None, defaults to "main"
-
-        load : bool, default: False
-            if True, tries to initialise the model by loading a model according
-            to load_file_name
-
-        load_file_name: str, default: None
-            file name from which to load the model; needs to be specified whenever
-            load is set to True
-
-        **w_dist_per_iter: bool, default: False
-            if True, the dictionary returned by training method contains a list of the 
-            Wasserstein distances between true data and generated events for every 
-            iteration (computed in the discriminator training step)
-
-        **dim_particle: int, default: 3
-            dimension of the particle space, default 3 are [p_t, eta, phi]
-
-        **dim_global: int, default: 10
-            dimension of the global variable space within the networks
-
-        **num_epic_layers_gen: int, default: 6
-            number of EPiC-layers in the generator
-
-        **num_epic_layers_dis: int, default: 3
-            number of EPiC-layers in the discriminator
-
-        **norm_sigma: float, default: 5.
-            used to normalise data to this std
-
-        **beta_1: float, default: 0.9
-            beta_1 parameter of the (Adam) optimizers
-        """
 
         self.w_dist_per_iter = kwargs.get("w_dist_per_iter", False)
 
@@ -169,13 +118,23 @@ class TrainableModel:
         self.real_label = 1.
         self.fake_label = 0.
         #load the dataset
-        dataset = data_proc.get_dataset(self.dataset_name)
+        try:
+            dataset = data_proc.get_dataset(self.dataset_name)
+        except FileNotFoundError:
+            print("the dataset you specified could not be found")
+            sys.exit()
+
         self.n_points = dataset.shape[1]
         #split into sets according to splits = [0.7, 0.15, 0.15]
         train_set, self.val_set, self.test_set = data_proc.split_dataset(dataset, rng = self.rng)
 
-        #load the precomputed kde for this dataset
-        self.kde = data_proc.get_kde(self.dataset_name)
+        #get kde for this dataset
+        try:
+            self.kde = data_proc.get_kde(dataset_name)
+        except FileNotFoundError:
+            print("could not find KDE, will compute it myself")
+            self.kde = data_proc.compute_kde(dataset_name)
+            
 
         #get the properties needed for normalisation
         self.train_set_means, self.train_set_stds, self.train_set_mins, _ = data_proc.dataset_properties(train_set)
@@ -656,7 +615,7 @@ class TrainableModel:
         self.optimizer_g.step()
 
 
-    def evaluation(self, make_plots = True, save_plots = True, save_result_dict = False, **kwargs):
+    def evaluate(self, make_plots = True, save_plots = True, save_result_dict = False, **kwargs):
         """Computes the evaluation scores and optionally the evaluation plots that are given in 
         the EPiC-GAN paper.
 
@@ -760,6 +719,68 @@ class TrainableModel:
                                                 dict_save_folder = dict_save_folder)
         
         return result_dict
+    
+
+
+    def generate(self, n_generation, **kwargs):
+        """Generates n_generation events.
+
+        Arguments
+        ------------
+
+        n_generation: int
+            number of events to be generated
+
+        **batch_size_gen: int, default: 500
+            batch size at which noise samples are passed through the generator
+
+        **set_min_pt: bool, default: True
+            if True, sets p_t coordinates of generated events to minimum value found in training set
+        
+        **order_by_pt: bool, default: False
+            if True, orders particles by p_t within jets
+
+        **normalise_data: bool, default: True
+            if True, normalises generated events to mean & std of training set; if False, output is
+            direct generator output (approx. normalised to mean 0, std norm_sigma, defined in object
+            instantiation, for each feature)
+
+        **center_gen: bool, default: True
+            if True, centers the eta- and phi-coordinates of generated events
+        """
+
+        batch_size_gen = kwargs.get("batch_size_gen", 500)
+        set_min_pt = kwargs.get("set_min_pt", True)
+        order_by_pt = kwargs.get("order_by_pt", False)
+        normalise_data = kwargs.get("normalise_data", True)
+        center_gen = kwargs.get("center_gen", True)
+
+        n_tot_generation = int(1.01*n_generation)
+
+        generated_events = evaluation.generation_loop(self.generator, self.n_points, self.kde, 
+                    batch_size = batch_size_gen, n_tot_generation = n_tot_generation,
+                    dim_global = self.dim_global, dim_particle = self.dim_particle, rng = self.rng,
+                    order_by_pt = order_by_pt, set_min_pt = set_min_pt, 
+                    min_pt = self.train_set_mins[0], center_gen = center_gen, 
+                    normalise_data = normalise_data, means = self.train_set_means, 
+                    stds = self.train_set_stds, norm_sigma = self.norm_sigma, device = self.device)
+        
+        #if too many samples got killed in the kde sampling
+        if len(generated_events) < n_generation:
+            #this will always be sufficiently large s.t. n_generation events get past the kde
+            #sampling
+            n_tot_generation = int(1.05*n_generation)
+            generated_events = evaluation.generation_loop(self.generator, self.n_points, self.kde, 
+                    batch_size = batch_size_gen, n_tot_generation = n_tot_generation,
+                    dim_global = self.dim_global, dim_particle = self.dim_particle, rng = self.rng,
+                    order_by_pt = order_by_pt, set_min_pt = set_min_pt, 
+                    min_pt = self.train_set_mins[0], center_gen = center_gen, 
+                    normalise_data = normalise_data, means = self.train_set_means, 
+                    stds = self.train_set_stds, norm_sigma = self.norm_sigma, device = self.device)
+            
+        generated_events = generated_events[:n_generation]
+
+        return generated_events
 
 
 
