@@ -618,6 +618,10 @@ class TrainableModel:
     def evaluate(self, make_plots = True, save_plots = True, save_result_dict = False, **kwargs):
         """Computes the evaluation scores and optionally the evaluation plots that are given in 
         the EPiC-GAN paper.
+        WARNING: this evaluates the current state of the object, which does not necessarily coincide
+        with the best model found in training. If you want to evaluate the best model found, load
+        that model either using function evaluate_performance.evaluate_performance() or instantiate
+        a new object of class TrainableModel setting 'load' to True.
 
         Arguments
         -------------

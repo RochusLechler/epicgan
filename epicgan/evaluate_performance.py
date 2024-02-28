@@ -250,6 +250,9 @@ def evaluation_scores_plots(real_jets, fake_jets, runs, make_plots = True, name_
         set of events; make sure it has length greater or equal to
         len(real_jets)*runs
 
+    runs: int
+        number of runs for which to compute evaluation scores using different samples of fake events
+
     make_plots: bool, default: True
         if True, the plots that are in the original EPiC-GAN paper will be made
 
@@ -293,7 +296,7 @@ def evaluation_scores_plots(real_jets, fake_jets, runs, make_plots = True, name_
 
     logger = logging.getLogger("main")
 
-    len_real_jets = len(real_jets)
+    len_real_jets = real_jets.shape[0]
 
     w_mass_mean, w_mass_std = performance_metrics.wasserstein_mass(real_jets,
                                 fake_jets, num_samples = len_real_jets, runs = runs,
