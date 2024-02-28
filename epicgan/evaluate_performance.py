@@ -1,8 +1,7 @@
-"""This script defines a function that evaluates performance of a trained network.
-Make sure that the hard-coded parameters that define the network architecture match
-the model you want to load.
-Due to the sheer amount of variables the ones that are usually not changed
-are implemented as kwargs.
+"""The functions defined here are used to evaluate the performance of a model, computing the 
+evaluation scores and creating the plots seen in the EPiC-GAN paper. The code for the actual
+plotting was taken from the original EPiC-GAN Github-project to ensure that the same things are 
+plotted in the same fashion.
 """
 
 import os
@@ -26,11 +25,11 @@ def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, 
     """Function that evaluates a stored network. It has an option to make the plots
     that are in the original EPiC-GAN paper and save them to a .png-file.
     If the network structure differs from the default, make sure to give the
-    respective kwargs.
+    respective kwargs.\n
     When running the evaluation, ensure the place from where you run the training
-    has the following folders and contents:
-    1. The specified dataset is stored in folder 'JetNet_datasets' in '.hdf5'-format
-    2. There is a folder 'saved_models' where the model you want to load is stored
+    has the following folders and contents:\n
+    1. The specified dataset is stored in folder 'JetNet_datasets' in '.hdf5'-format\n
+    2. There is a folder 'saved_models' where the model you want to load is stored\n
     3. There is a folder 'logbooks', the logfile will be stored here
 
     Arguments
@@ -265,7 +264,7 @@ def evaluation_scores_plots(real_jets, fake_jets, runs, make_plots = True, name_
 
     save_result_dict: bool, default: False
         if True, dictionary containing results is stored to a .pkl-file with
-        name "eval\_scores\_" + save_file_name in folder saved_models. Folder can be
+        name "eval_scores_" + save_file_name in folder saved_models. Folder can be
         changed by specifying keyword 'dict_save_folder'.
 
     save_file_name: str, default: None
@@ -385,19 +384,19 @@ def evaluation_scores_plots(real_jets, fake_jets, runs, make_plots = True, name_
 
 
 ##############  got the code for the plots in this function from EPiC-GAN Github  #################
-def plot_overview(test_set, dataset_name, generated_events = None, generator = None, n_points = None,
+def plot_overview(data_set, dataset_name, generated_events = None, generator = None, n_points = None,
                     kde = None, batch_size_gen = 500, n_tot_generation = 300000,
                     dim_global = 10, dim_particle = 3, rng = None, order_by_pt = True,
                     set_min_pt = True, min_pt = 0, center_gen = True,
                     normalise_data = True, means = np.zeros(3), stds = np.ones(3),
                     norm_sigma = 1, device = "cuda"):
-    """This function makes the 9 plots that are given for each dataset in the original EPiC-GAN paper.
-    It does NOT save them.
+    """This function makes the 9 plots that are given for each dataset in the original EPiC-GAN 
+    paper.    
 
     Arguments
     -------------
 
-    test_set: np.array
+    data_set: np.array
         set of samples from original dataset to use for evaluation
 
     datset_name: str

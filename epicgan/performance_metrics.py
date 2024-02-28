@@ -214,7 +214,9 @@ def wasserstein_efps(real_jets, fake_jets,
     deviations between the energyflow polynomials of two sets of jets separately, or
     the mean of means and norm of standard deviations over the polynomials.
     Means are computed over distances between real_jets and runs sets of
-    samples from fake_jets each of size num_samples.
+    samples from fake_jets each of size num_samples.\n
+    For further details see 
+    https://jetnet.readthedocs.io/en/latest/pages/utils.html#jetnet.utils.efps.
 
     Arguments
     -------------
@@ -227,8 +229,7 @@ def wasserstein_efps(real_jets, fake_jets,
         num_samples*runs
 
     efpset_args: list, default: [("n==", 4), ("d==", 4), ("p==", 1)]
-        list of arguments for computation of energyflow polynomials; for further
-        details see https://jetnet.readthedocs.io/en/latest/pages/utils.html#jetnet.utils.efps
+        list of arguments for computation of energyflow polynomials; 
 
     num_samples: int, default: 10000
         number of samples from fake_jets used for computation of Wasserstein

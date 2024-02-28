@@ -9,9 +9,8 @@ from epicgan import utils, models, evaluation, data_proc
 
 
 def generate_events(dataset_name, model_name, n_generation, n_points, rng = None, **kwargs):
-    """Generate events that mimick specified dataset.
-    WARNING: it is recommended to generate events using the generate()-method of class
-    training.TrainableModel. For using this function, please make sure to carefully specify all
+    """Generate n_generation events that mimick specified dataset.\n
+    For using this function, please make sure to carefully specify all
     kwargs that differed from default in the training.
 
     Arguments
@@ -89,9 +88,9 @@ def generate_events(dataset_name, model_name, n_generation, n_points, rng = None
                                  hid_size_p = 128, hid_size_g = dim_global, hid_size_g_in = 128, 
                                  num_epic_layers = num_epic_layers_gen)
 
-    path = os.path.join(folder, model_name + ".tar")
+    
     try:
-        generator = utils.load_generator(generator, path, folder = folder, device = device)
+        generator = utils.load_generator(generator, model_name, folder = folder, device = device)
     except FileNotFoundError:
         print("cannot the model you specified")
         sys.exit()

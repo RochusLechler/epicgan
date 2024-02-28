@@ -373,15 +373,16 @@ def save_model(generator, discriminator, optimizer_g, optimizer_d,
 def load_model(generator, discriminator, optimizer_g, optimizer_d,
                 file_name, folder = "./saved_models", device = "cuda"):
     """Loads a GAN consisting of generator, discriminator and optimizers
-    for each from a file that was created using the above function save_model
+    for each from a file that was created using the above function save_model.\n
+    Make sure that the input structures fit the model to be loaded.
 
     Arguments
     ------------
 
-    generator: Generator
+    generator: epicgan.models.Generator
         generator network of the GAN
 
-    discriminator: Discriminator
+    discriminator: epicgan.models.Discriminator
         discriminator network of the GAN
 
     optimizer_g: torch.optim.Optimizer
@@ -393,7 +394,7 @@ def load_model(generator, discriminator, optimizer_g, optimizer_d,
     file_name: str
         filename of the file to load
 
-    folder: str, default: "./saved_models"
+    folder: str, default: 'saved_models'
         folder where to search for the file
 
     Returns
@@ -446,7 +447,7 @@ def load_generator(generator, file_name, folder = "./saved_models", device = "cu
     file_name: str
         filename of the file to load
 
-    folder: str, default: "./saved_models"
+    folder: str, default: 'saved_models'
         folder where to search for the file
 
     Returns

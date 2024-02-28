@@ -1,4 +1,4 @@
-"""Implementing features regarding data processing
+"""Implementing features regarding data processing.
 """
 import logging
 import sys
@@ -21,8 +21,8 @@ datasets_folder = "./JetNet_datasets/"
 
 
 def get_dataset_path(dataset_name):
-    """Returns the path to the specified dataset. The folder is hard-coded, please
-    change to the folder where the dataset hdf5-files are stored.
+    """Returns the path to the specified dataset. The folder 'JetNet_datasets' is hard-coded, the 
+    datasets are to be stored here in the original .df5-format.
 
     Arguments
     ---------------
@@ -55,7 +55,7 @@ def get_dataset_path(dataset_name):
 
 
 def get_dataset(dataset_name, drop_mask = True, reorder = True):
-    """Returns the specified dataset as a np.ndarray.
+    """Returns the specified dataset as a numpy array.
 
     Arguments
     ---------------
@@ -99,7 +99,7 @@ def get_dataset(dataset_name, drop_mask = True, reorder = True):
 
 
 def dataset_properties(dataset_train):
-    """Computes mean, standard deviation, minmum value and maximum value for
+    """Computes mean, standard deviation, minimum value and maximum value for
     each particle feature not considering particles that were zero-padded.
 
     Arguments
@@ -224,7 +224,7 @@ def normalise_dataset(data, means, stds, norm_sigma = 5):
 
 
 def inverse_normalise_dataset(data, means, stds, norm_sigma = 5):
-    """Normalises the given data to specified mean values standard deviations.
+    """Normalises the given data to specified mean values and standard deviations.
     Expected shape is [len_data, n_points, n_features]
 
     Arguments
@@ -399,8 +399,10 @@ class PreparedDataset(IterableDataset):
     contain events of equal effective particle multiplicity n_eff, i.e. equal number of particles 
     that are not zero-padded. The __iter__-method was overrode s.t. if rng is given the batches are 
     yielded in random order and after each cycle the dataset is reshuffled and the batches are re-
-    defined. If rng is None, the batches are yielded in ascending order in n_eff and for each cycle 
-    the same batches are yielded in the same order.
+    defined. Conversely, if rng is None, the batches are yielded in ascending order in n_eff and for
+    each cycle the same batches are yielded in the same order.
+    The __iter__-method does not raise a StopIteration, that has to be implemented in the actual 
+    training loop.
 
     Arguments
     ------------
@@ -417,21 +419,6 @@ class PreparedDataset(IterableDataset):
     """
 
     def __init__(self, dataset, batch_size = 128, rng = None):
-        """Initialising the iterable dataset.
-
-        Arguments
-        ------------
-
-        dataset: np.array
-            dataset over which to iterate
-
-        batch_size: int, default: 128
-            batch size to be returned by an associated iterator
-
-        rng: np.random.Generator, default: None
-            random number generator used for shuffling; if equal to None, data
-            will not be shuffled
-        """
 
         super(PreparedDataset).__init__()
 
@@ -488,8 +475,7 @@ class PreparedDataset(IterableDataset):
 
     def define_batches(self):
         """Makes batches of equal effective particle multiplicity n_eff and
-        size self.batch_size or less for remaining samples.
-
+        size self.batch_size (or less for remaining samples).
         """
 
         #same functionality as utils.calc_multiplicities, but we need the intermediate nonzero counts

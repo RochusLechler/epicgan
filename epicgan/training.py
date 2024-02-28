@@ -1,7 +1,5 @@
-"""The class defined here is a trainable model. It has a method that 
-performs the training and a method that performs the evaluation.
-Due to the sheer amount of variables the ones that are usually not changed
-are implemented as kwargs.
+"""The class defined here is a trainable model. It has a methods for performing training, 
+evaluation and event generation.
 """
 
 import os
@@ -20,11 +18,11 @@ from epicgan import utils, data_proc, models, evaluation, performance_metrics, e
 
 class TrainableModel:
     """A class incorporating the GAN model. It has a method training() that performs the training 
-    and a method evaluation() that performs the evaluation.
+    and a method evaluation() that performs the evaluation.\n
     When running the training, ensure the location from where you run it has the following folders 
-    and contents:
-    1. The specified dataset is stored in folder 'JetNet_datasets' in '.hdf5'-format
-    2. There is a folder 'saved_models', the best model will be stored here
+    and contents:\n
+    1. The specified dataset is stored in folder 'JetNet_datasets' in '.hdf5'-format\n
+    2. There is a folder 'saved_models', the best model will be stored here\n
     3. There is a folder 'logbooks', the logfile will be stored here; the log-filename is a concate-
     nation of the dataset-name and the specified 'file_suffix'
 
@@ -218,8 +216,7 @@ class TrainableModel:
     def training(self, num_epochs, loss = "BCE", save_result_dict = False, **kwargs):
         """This function performs the actual training of the specified model.
         As optimizers for both generator and discriminator Adam is used. The 
-        returns are contained in a dictionary with the results specified here
-        being the keys (as strings).
+        returns are contained in a dictionary.
 
         Arguments
         -----------
@@ -276,7 +273,7 @@ class TrainableModel:
         -----------
 
         result_dict: dict
-            dictionary with the following keys and values:
+            dictionary with the following keys:
                 best_w_distance: float
                     Wasserstein distance score on the test set for the best epoch
 
@@ -494,7 +491,7 @@ class TrainableModel:
 
 
     def discriminator_training(self, data, loss = "BCE"):
-        """This function performs the discriminator training
+        """Performs the discriminator training.
 
         Arguments
         ------------
@@ -571,7 +568,7 @@ class TrainableModel:
 
 
     def generator_training(self, local_batch_size, loss = "BCE"):
-        """This function performs the generator training
+        """Performs the generator training
 
         Arguments
         -------------
@@ -617,11 +614,12 @@ class TrainableModel:
 
     def evaluate(self, make_plots = True, save_plots = True, save_result_dict = False, **kwargs):
         """Computes the evaluation scores and optionally the evaluation plots that are given in 
-        the EPiC-GAN paper.
-        WARNING: this evaluates the current state of the object, which does not necessarily coincide
-        with the best model found in training. If you want to evaluate the best model found, load
-        that model either using function evaluate_performance.evaluate_performance() or instantiate
-        a new object of class TrainableModel setting 'load' to True.
+        the EPiC-GAN paper.\n
+        WARNING: This method evaluates the current state of the object, which does not necessarily 
+        coincide with the best model found in training. If you want to evaluate the best model 
+        found, load that model either using function evaluate_performance.evaluate_performance() or 
+        instantiate a new object of class TrainableModel setting 'load' to True and specifying a 
+        model to load.
 
         Arguments
         -------------
@@ -727,7 +725,12 @@ class TrainableModel:
 
 
     def generate(self, n_generation, **kwargs):
-        """Generates n_generation events.
+        """Generates n_generation events.\n
+        WARNING: This method uses the current state of the object, which does not necessarily 
+        coincide with the best model found in training. If you want to use the best model 
+        found, instantiate a new object of class TrainableModel setting 'load' to True and 
+        specifying a model to load or alternatively, use function generation.generate(). Make sure
+        to specify all parameters that were differing from default in the training.
 
         Arguments
         ------------

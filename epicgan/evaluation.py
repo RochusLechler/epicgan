@@ -1,4 +1,4 @@
-"""Implementations of functions used for evaluation of the performance of the
+"""Implementations of the two major functions used for evaluation of the performance of the
 network.
 """
 
@@ -27,7 +27,7 @@ def compute_wasserstein_distance(network, data_set, kde, batch_size_gen = 500,
     Arguments
     --------------
 
-    network: Generator
+    network: epicgan.models.Generator
         generator network with which to perform the evaluation
 
     data_set: np.array
@@ -96,7 +96,7 @@ def compute_wasserstein_distance(network, data_set, kde, batch_size_gen = 500,
     ------------
 
     w_dist_mean: float
-        Wasserstein distance for the mass averaged over all runs
+        Wasserstein distance between the mass distributions averaged over all runs
     """
 
     len_data_set, n_points = data_set.shape[0], data_set.shape[1]
@@ -137,13 +137,12 @@ def generation_loop(network, n_points, kde, batch_size = 500, n_tot_generation =
                     set_min_pt = True, min_pt = 0, center_gen = True,
                     normalise_data = True, means = np.zeros(3), stds = np.ones(3),
                     norm_sigma = 1, device = "cuda"):
-    """This function generates simulated events mimicking the appearance of the
-    JetNet datasets.
+    """Generates simulated events mimicking the appearance of the JetNet datasets.\n
     First, a distribution of n_eff, which is the number of particles per jet
     with p_t != 0, is sampled from the precomputed kernel density estimation for
     the respective dataset. Values out of the range [1, n_points] are discarded.
-    Note that this means that the number of returned events  can be
-    a bit smaller than the specified n_tot_generation.
+    Note that this means that the number of returned events can be
+    slightly smaller than the specified n_tot_generation.
     Then, the specified generator network generates jets
     of particle multiplicity n_eff as often as the kernel density estimation
     yielded that value n_eff. Afterwards, zero-padding increases the final
