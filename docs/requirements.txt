@@ -5,3 +5,4 @@
   tqdm
   jetnet
   h5py
+  sphinx-rtd-theme
