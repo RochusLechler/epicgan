@@ -313,7 +313,7 @@ def evaluation_scores_plots(real_jets, fake_jets, runs, make_plots = True, name_
     #commented lines calculate FPND score; Python version <= 3.10, torch-cluster required
     #if n_points == 30:
     #    fpnd_mean, fpnd_std = performance_metrics.fpnd_score(generated_events, dataname = dataset_name,
-    #                        num_samples = len_test_set, num_batches = 3, return_std = True)
+    #                        num_samples = len_real_jets, num_batches = 3, return_std = True)
 
     logger.info("Evaluation done")
 
@@ -487,17 +487,17 @@ def plot_overview(data_set, dataset_name, generated_events = None, generator = N
                             set_min_pt = set_min_pt, min_pt = min_pt, center_gen = center_gen,
                             normalise_data = normalise_data, means = means, stds = stds,
                             norm_sigma = norm_sigma, device = device)
-        gen_ary = gen_ary[:len(test_set)]
+        gen_ary = gen_ary[:len(data_set)]
 
         if order_by_pt:
-            data_ary = utils.order_array_pt(test_set)
+            data_ary = utils.order_array_pt(data_set)
 
     else:
-        data_ary = test_set
+        data_ary = data_set
         if order_by_pt:
             data_ary = utils.order_array_pt(data_ary)
 
-        gen_ary  = generated_events[:len(test_set)]
+        gen_ary  = generated_events[:len(data_set)]
 
 
     data_test_ary = data_ary
