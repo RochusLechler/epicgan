@@ -60,10 +60,10 @@ epicgan.utils module
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
+#Module contents
+#---------------
 
-.. automodule:: epicgan
-   :members:
-   :undoc-members:
-   :show-inheritance:
+#.. automodule:: epicgan
+#   :members:
+#   :undoc-members:
+#   :show-inheritance:

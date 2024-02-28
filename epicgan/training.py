@@ -1,4 +1,4 @@
-"""The class defined here is a trainable model. It has a methods for performing training, 
+"""The class defined here is a trainable model. It has methods for performing training, 
 evaluation and event generation.
 """
 
@@ -36,7 +36,7 @@ class TrainableModel:
         number of particles per jet, either 30 or 150
 
     batch_size: int, default: 128
-        batch size used for the training
+        batch size used for training
 
     rng: np.random.Generator, default: None
         random number generator used for shuffling throughout the training;
@@ -441,6 +441,7 @@ class TrainableModel:
                         normalise_data = normalise_data,
                         means = self.train_set_means, stds = self.train_set_stds,
                         norm_sigma = self.norm_sigma, runs = runs, device = self.device)
+        self.w_dist_list.append(w_distance)
 
         self.logger.info("Wasserstein-distance for epoch %d is %.5f", int(self.epoch_counter+1), w_distance)
 
@@ -478,7 +479,7 @@ class TrainableModel:
                                 normalise_data = normalise_data,
                                 means = self.train_set_means, stds = self.train_set_stds,
                                 norm_sigma = self.norm_sigma, runs = runs, device = self.device)
-                self.w_dist_list.append(self.test_w_distance)
+                
 
 
                 utils.save_model(self.generator, self.discriminator, self.optimizer_g, self.optimizer_d,
