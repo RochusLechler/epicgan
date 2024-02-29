@@ -265,7 +265,8 @@ def generation_loop(network, n_points, kde, batch_size = 500, n_tot_generation =
             gen_out_no_pad = network(noise_particle, noise_global).detach().cpu().numpy()
 
             if normalise_data:
-                gen_out_no_pad = data_proc.inverse_normalise_dataset(gen_out_no_pad, means, stds, norm_sigma = norm_sigma)
+                gen_out_no_pad = data_proc.inverse_normalise_dataset(gen_out_no_pad, means, stds, 
+                                                                     norm_sigma = norm_sigma)
 
             #zero-padding to reobtain total particle number n_points
             gen_out = np.zeros((gen_out_no_pad.shape[0], n_points, dim_particle))

@@ -54,6 +54,9 @@ class TrainableModel:
         file name from which to load the model; needs to be specified whenever
         load is set to True
 
+    **center_jets: bool, default: True
+        if True, centers jets within each dataset (training, validation, test)
+
     **w_dist_per_iter: bool, default: False
         if True, the dictionary returned by training method contains a list of the 
         Wasserstein distances between true data and generated events for every 
@@ -78,20 +81,16 @@ class TrainableModel:
         beta_1 parameter of the (Adam) optimizers
     """
 
-    def __init__(self, dataset_name, batch_size = 128, rng = None, file_suffix = None, load = False, load_file_name = None, **kwargs):
+    def __init__(self, dataset_name, batch_size = 128, rng = None, file_suffix = None, load = False, 
+                load_file_name = None, **kwargs):
 
+        center_jets = kwargs.get("center_jets", True)
         self.w_dist_per_iter = kwargs.get("w_dist_per_iter", False)
-
         self.dim_particle = kwargs.get("dim_particle", 3)
-
         self.dim_global = kwargs.get("dim_global", 10)
-
         num_epic_layers_gen = kwargs.get("num_epic_layers_gen", 6)
-
         num_epic_layers_dis = kwargs.get("num_epic_layers_dis", 3)
-
         self.norm_sigma = kwargs.get("norm_sigma", 5)
-
         beta_1 = kwargs.get("beta_1", 0.9)
 
 
@@ -125,6 +124,11 @@ class TrainableModel:
         self.n_points = dataset.shape[1]
         #split into sets according to splits = [0.7, 0.15, 0.15]
         train_set, self.val_set, self.test_set = data_proc.split_dataset(dataset, rng = self.rng)
+
+        if center_jets:
+            train_set = utils.center_jets(train_set)
+            self.val_set = utils.center_jets(self.val_set)
+            self.test_set = utils.center_jets(self.test_set)
 
         #get kde for this dataset
         try:
@@ -230,8 +234,8 @@ class TrainableModel:
 
         save_result_dict: bool, default: False
             if True, dictionary containing results is stored to a .pkl-file with
-            name dataset_name + "_training_" + file_suffix in folder saved_models. Differing file_suffix
-            can be specified with keyword 'save_file_suffix'. Differing folder
+            name dataset_name + "_training_" + file_suffix in folder saved_models. Differing 
+            file_suffix can be specified with keyword 'save_file_suffix'. Differing folder
             can be specified with keyword 'dict_save_folder'.
 
         **save_file_suffix: str, default: file_suffix (specified in object initialisation)
@@ -344,22 +348,26 @@ class TrainableModel:
                 self.loss_gen /= self.num_iter_per_ep
                 self.mean_loss_dis_list.append(self.loss_dis)
                 self.mean_loss_gen_list.append(self.loss_gen)
-                self.logger.info("losses: Discriminator: %.3f; Generator: %.3f", self.loss_dis, self.loss_gen)
+                self.logger.info("losses: Discriminator: %.3f; Generator: %.3f",
+                                  self.loss_dis, self.loss_gen)
                 self.loss_dis = 0
                 self.loss_gen = 0
 
-                self.validation_loop(n_tot_generation, runs, batch_size_gen, set_min_pt, order_by_pt, normalise_data, center_gen)
+                self.validation_loop(n_tot_generation, runs, batch_size_gen, set_min_pt, 
+                                     order_by_pt, normalise_data, center_gen)
 
                 self.epoch_counter += 1
 
             if self.epoch_counter == num_epochs: #breaking condition
                 self.logger.info("All %d epochs done, training finished", num_epochs)
-                self.logger.info("Best epoch was epoch %d with a Wasserstein distance of %.5f", self.best_epoch, self.test_w_distance)
+                self.logger.info("Best epoch was epoch %d with a Wasserstein distance of %.5f", 
+                                 self.best_epoch, self.test_w_distance)
                 iterator.close()
                 break
 
             if normalise_data:
-                batch = data_proc.normalise_dataset(batch, self.train_set_means, self.train_set_stds, norm_sigma = self.norm_sigma)
+                batch = data_proc.normalise_dataset(batch, self.train_set_means, self.train_set_stds, 
+                                                    norm_sigma = self.norm_sigma)
 
             data = batch.to(self.device)
             #this might be smaller than self.batch_size
@@ -398,7 +406,8 @@ class TrainableModel:
 
 
 
-    def validation_loop(self, n_tot_generation, runs, batch_size_gen, set_min_pt, order_by_pt, normalise_data, center_gen):
+    def validation_loop(self, n_tot_generation, runs, batch_size_gen, set_min_pt, order_by_pt, 
+                        normalise_data, center_gen):
         """Performs a single validation loop, i.e.creates n_tot_generation fake events and computes
         the Wasserstein distance between the mass distributions of the validation set and an equal
         amount of fake events 'runs' times (for different fake samples). The validation score is the
@@ -450,12 +459,12 @@ class TrainableModel:
             self.best_w_dist = w_distance
             self.best_epoch = self.epoch_counter + 1
             #get Wasserstein distance for the test set
-            self.test_w_distance = evaluation.compute_wasserstein_distance(self.generator, self.test_set, self.kde,
-                            batch_size_gen = batch_size_gen, n_tot_generation = n_tot_generation,
-                            dim_global = self.dim_global, dim_particle = self.dim_particle,
-                            rng = self.rng, set_min_pt = set_min_pt, min_pt = self.train_set_mins[0],
-                            center_gen = center_gen, order_by_pt = order_by_pt,
-                            normalise_data = normalise_data,
+            self.test_w_distance = evaluation.compute_wasserstein_distance(self.generator, 
+                            self.test_set, self.kde, batch_size_gen = batch_size_gen, 
+                            n_tot_generation = n_tot_generation, dim_global = self.dim_global, 
+                            dim_particle = self.dim_particle, rng = self.rng, set_min_pt = set_min_pt, 
+                            min_pt = self.train_set_mins[0], center_gen = center_gen, 
+                            order_by_pt = order_by_pt, normalise_data = normalise_data,
                             means = self.train_set_means, stds = self.train_set_stds,
                             norm_sigma = self.norm_sigma, runs = runs, device = self.device)
             self.w_dist_list.append(self.test_w_distance)
@@ -471,22 +480,24 @@ class TrainableModel:
                 self.best_w_dist = w_distance
                 self.best_epoch = self.epoch_counter + 1
 
-                self.test_w_distance = evaluation.compute_wasserstein_distance(self.generator, self.test_set, self.kde,
-                                batch_size_gen = batch_size_gen, n_tot_generation = n_tot_generation,
-                                dim_global = self.dim_global, dim_particle = self.dim_particle,
-                                rng = self.rng, set_min_pt = set_min_pt, min_pt = self.train_set_mins[0],
-                                center_gen = center_gen, order_by_pt = order_by_pt,
-                                normalise_data = normalise_data,
+                self.test_w_distance = evaluation.compute_wasserstein_distance(self.generator, 
+                                self.test_set, self.kde, batch_size_gen = batch_size_gen, 
+                                n_tot_generation = n_tot_generation, dim_global = self.dim_global, 
+                                dim_particle = self.dim_particle, rng = self.rng, set_min_pt = set_min_pt, 
+                                min_pt = self.train_set_mins[0], center_gen = center_gen, 
+                                order_by_pt = order_by_pt, normalise_data = normalise_data,
                                 means = self.train_set_means, stds = self.train_set_stds,
                                 norm_sigma = self.norm_sigma, runs = runs, device = self.device)
                 
 
 
-                utils.save_model(self.generator, self.discriminator, self.optimizer_g, self.optimizer_d,
-                                file_name = self.file_name_suffix)
+                utils.save_model(self.generator, self.discriminator, self.optimizer_g, 
+                                self.optimizer_d, file_name = self.file_name_suffix)
 
-                self.logger.info("Better model found and saved after epoch %i", int(self.epoch_counter+1))
-                self.logger.info("Its Wasserstein distance on the test set is %.5f", self.test_w_distance)
+                self.logger.info("Better model found and saved after epoch %i", 
+                                 int(self.epoch_counter+1))
+                self.logger.info("Its Wasserstein distance on the test set is %.5f", 
+                                 self.test_w_distance)
 
 
 
@@ -533,8 +544,11 @@ class TrainableModel:
             discr_loss = 0.5 * (torch.mean(torch.square(discr_out_real - self.real_label)) + torch.mean(torch.square(discr_out_fake - self.fake_label)))
         elif loss == "BCE":
             loss = torch.nn.BCEWithLogitsLoss()
-            real_label_tensor = torch.full((local_batch_size,1), self.real_label, dtype = torch.float, device = self.device)
-            fake_label_tensor = torch.full((local_batch_size,1), self.fake_label, dtype = torch.float, device = self.device)
+            real_label_tensor = torch.full((local_batch_size,1), self.real_label, 
+                                           dtype = torch.float, device = self.device)
+            fake_label_tensor = torch.full((local_batch_size,1), self.fake_label, 
+                                           dtype = torch.float, device = self.device)
+            
             label_tensor = torch.cat((real_label_tensor, fake_label_tensor), dim = 0)
 
             output_tensor = torch.cat((discr_out_real, discr_out_fake), dim = 0)
@@ -555,15 +569,17 @@ class TrainableModel:
             gen_out = gen_out.detach().cpu().numpy()
 
             
-            data = data_proc.inverse_normalise_dataset(data, self.train_set_means, self.train_set_stds, norm_sigma = self.norm_sigma)
-            gen_out = data_proc.inverse_normalise_dataset(gen_out, self.train_set_means, self.train_set_stds, norm_sigma = self.norm_sigma)
+            data = data_proc.inverse_normalise_dataset(data, self.train_set_means, self.train_set_stds, 
+                                                       norm_sigma = self.norm_sigma)
+            gen_out = data_proc.inverse_normalise_dataset(gen_out, self.train_set_means, self.train_set_stds, 
+                                                          norm_sigma = self.norm_sigma)
             data = utils.order_array_pt(data)
             gen_out = utils.order_array_pt(gen_out)
             gen_out = data_proc.set_min_pt(gen_out, self.train_set_mins[0])
             gen_out = utils.center_jets(gen_out)
 
-            w_dist = performance_metrics.wasserstein_mass(data, gen_out, num_samples = data.shape[0], runs = 1,
-                return_std = False, rng = self.rng)
+            w_dist = performance_metrics.wasserstein_mass(data, gen_out, num_samples = data.shape[0], 
+                                                        runs = 1, return_std = False, rng = self.rng)
             self.w_dist_per_iter_list.append(w_dist)
 
 
@@ -711,15 +727,17 @@ class TrainableModel:
             self.test_set = utils.order_array_pt(self.test_set)
         
         if make_plots:
-            result_dict, fig = evaluate_performance.evaluation_scores_plots(self.test_set, generated_events, runs, make_plots = make_plots, 
-                                                name_plots = name_plots, save_plots = save_plots, save_result_dict = save_result_dict, 
-                                                save_file_name = save_file_name, rng = self.rng, dict_save_folder = dict_save_folder)
+            result_dict, fig = evaluate_performance.evaluation_scores_plots(self.test_set, 
+                                generated_events, runs, make_plots = make_plots, name_plots = name_plots, 
+                                save_plots = save_plots, save_result_dict = save_result_dict, 
+                                save_file_name = save_file_name, rng = self.rng, 
+                                dict_save_folder = dict_save_folder)
         
             return result_dict, fig
         
-        result_dict = evaluate_performance.evaluation_scores_plots(self.test_set, generated_events, runs, make_plots = make_plots, 
-                                                save_result_dict = save_result_dict, save_file_name = save_file_name, rng = self.rng, 
-                                                dict_save_folder = dict_save_folder)
+        result_dict = evaluate_performance.evaluation_scores_plots(self.test_set, generated_events, 
+                            runs, make_plots = make_plots, save_result_dict = save_result_dict, 
+                            save_file_name = save_file_name, rng = self.rng, dict_save_folder = dict_save_folder)
         
         return result_dict
     

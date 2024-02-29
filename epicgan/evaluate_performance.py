@@ -82,6 +82,9 @@ def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, 
     **norm_sigma: float, default: 5.
         used to normalise data to this std
 
+    **center_jets: bool, default: True
+        if True, centers jets within each dataset (training, test)
+
     **n_tot_generation: int, default: 300000
         number of samples generated for computing each evaluation score
 
@@ -122,29 +125,18 @@ def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, 
     """
 
     model_folder = kwargs.get("model_folder", "saved_models")
-
     dim_particle = kwargs.get("dim_particle", 3)
-
     dim_global = kwargs.get("dim_global", 10)
-
     num_epic_layers_gen = kwargs.get("num_epic_layers_gen", 6)
-
     num_epic_layers_dis = kwargs.get("num_epic_layers_dis", 3)
-
     norm_sigma = kwargs.get("norm_sigma", 5)
-
+    center_jets = kwargs.get("center_jets", True)
     n_tot_generation = kwargs.get("n_tot_generation", 300000)
-
     runs = kwargs.get("runs", 10)
-
     batch_size_gen = kwargs.get("batch_size_gen", 500)
-
     set_min_pt = kwargs.get("set_min_pt", True)
-
     order_by_pt = kwargs.get("order_by_pt", True)
-
     normalise_data = kwargs.get("normalise_data", True)
-
     center_gen = kwargs.get("center_gen", True)
 
 
@@ -180,8 +172,13 @@ def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, 
     optimizer_d = torch.optim.Adam(discriminator.parameters())
 
     try:
-        generator, discriminator, optimizer_g, optimizer_d = utils.load_model(generator, discriminator, optimizer_g, optimizer_d, file_name = model_name, 
-                                                                              folder = model_folder, device = device)
+        generator, discriminator, optimizer_g, optimizer_d = utils.load_model(generator, 
+                                                                              discriminator, 
+                                                                              optimizer_g, 
+                                                                              optimizer_d, 
+                                                                              file_name = model_name, 
+                                                                              folder = model_folder, 
+                                                                              device = device)
     except FileNotFoundError as e:
         logger.exception(e)
         logger.critical("could not find a file named %s in saved_models", model_name)
@@ -200,6 +197,10 @@ def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, 
         sys.exit()
 
     train_set, _, test_set = data_proc.split_dataset(dataset, rng = rng)
+
+    if center_jets:
+        train_set = utils.center_jets(train_set)
+        test_set = utils.center_jets(test_set)
 
     try:
         kde = data_proc.get_kde(dataset_name)
@@ -223,18 +224,23 @@ def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, 
 
     save_file_name = dataset_name + "_evaluation_" + save_file_name + ".pkl"
     if make_plots:
-        result_dict, fig = evaluation_scores_plots(test_set, generated_events, runs = runs, name_plots = dataset_name, save_plots = save_plots, 
-                                                   save_result_dict = save_result_dict, save_file_name = save_file_name, rng = rng)
+        result_dict, fig = evaluation_scores_plots(test_set, generated_events, runs = runs, 
+                                name_plots = dataset_name, save_plots = save_plots, 
+                                save_result_dict = save_result_dict, save_file_name = save_file_name, 
+                                rng = rng)
+        
         return result_dict, fig
 
-    result_dict = evaluation_scores_plots(test_set, generated_events, runs = runs, make_plots = False, save_result_dict = save_result_dict, rng = rng)
+    result_dict = evaluation_scores_plots(test_set, generated_events, runs = runs, make_plots = False, 
+                                          save_result_dict = save_result_dict, rng = rng)
     return result_dict
 
 
 
 
-def evaluation_scores_plots(real_jets, fake_jets, runs, make_plots = True, name_plots = None, save_plots = True, save_result_dict = False, 
-                      save_file_name = None, rng = None, **kwargs):
+def evaluation_scores_plots(real_jets, fake_jets, runs, make_plots = True, name_plots = None, 
+                            save_plots = True, save_result_dict = False, save_file_name = None, 
+                            rng = None, **kwargs):
     """
     Computes the evaluation scores and optionally the evaluation plots for given real and fake data.
 
@@ -482,8 +488,9 @@ def plot_overview(data_set, dataset_name, generated_events = None, generator = N
                                will return None""")
             return None
 
-        gen_ary = evaluation.generation_loop(generator, n_points, kde, batch_size = batch_size_gen, n_tot_generation = n_tot_generation,
-                            dim_global = dim_global, dim_particle = dim_particle, rng = rng, order_by_pt = order_by_pt,
+        gen_ary = evaluation.generation_loop(generator, n_points, kde, batch_size = batch_size_gen, 
+                            n_tot_generation = n_tot_generation, dim_global = dim_global, 
+                            dim_particle = dim_particle, rng = rng, order_by_pt = order_by_pt,
                             set_min_pt = set_min_pt, min_pt = min_pt, center_gen = center_gen,
                             normalise_data = normalise_data, means = means, stds = stds,
                             norm_sigma = norm_sigma, device = device)

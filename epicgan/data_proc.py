@@ -340,7 +340,8 @@ def compute_kde(dataset_name):
 
 
 
-def get_noise(n_points, batch_size = 128, dim_global = 10, dim_particle = 3, rng = None, device = "cuda"):
+def get_noise(n_points, batch_size = 128, dim_global = 10, dim_particle = 3, rng = None, 
+              device = "cuda"):
     """Samples the noise needed as input for the generator with mean 0 and standard
     deviation 1
 
