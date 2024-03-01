@@ -467,7 +467,6 @@ class TrainableModel:
                             order_by_pt = order_by_pt, normalise_data = normalise_data,
                             means = self.train_set_means, stds = self.train_set_stds,
                             norm_sigma = self.norm_sigma, runs = runs, device = self.device)
-            self.w_dist_list.append(self.test_w_distance)
 
             utils.save_model(self.generator, self.discriminator, self.optimizer_g, self.optimizer_d,
                             file_name = self.file_name_suffix)
