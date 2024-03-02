@@ -222,7 +222,6 @@ def evaluate_performance(dataset_name, model_name, n_points, make_plots = True, 
         #is performed already in generation_loop for fake samples
         test_set = utils.order_array_pt(test_set)
 
-    save_file_name = dataset_name + "_evaluation_" + save_file_name + ".pkl"
     if make_plots:
         result_dict, fig = evaluation_scores_plots(test_set, generated_events, runs = runs, 
                                 name_plots = dataset_name, save_plots = save_plots, 
