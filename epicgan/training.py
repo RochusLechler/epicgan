@@ -307,17 +307,11 @@ class TrainableModel:
                 g['lr'] = kwargs["lr_dis"]
 
         n_tot_generation = kwargs.get("n_tot_generation", 300000)
-
         runs = kwargs.get("runs", 10)
-
         batch_size_gen = kwargs.get("batch_size_gen", 500)
-
         set_min_pt = kwargs.get("set_min_pt", True)
-
         order_by_pt = kwargs.get("order_by_pt", True)
-
         normalise_data = kwargs.get("normalise_data", True)
-
         center_gen = kwargs.get("center_gen", True)
 
 
@@ -335,9 +329,9 @@ class TrainableModel:
         dataloader = torch.utils.data.DataLoader(self.dataset, batch_size = None)
 
         #use tqdm in order to display a progress bar
-        iterator = tqdm.tqdm(dataloader, total = int(self.num_iter_per_ep*num_epochs - 1))
+        tqdm_dataloader = tqdm.tqdm(dataloader, total = int(self.num_iter_per_ep*num_epochs - 1))
         #training loop
-        for batch in iterator:
+        for batch in tqdm_dataloader:
             iteration_counter += 1
 
             #validation loop
@@ -362,7 +356,7 @@ class TrainableModel:
                 self.logger.info("All %d epochs done, training finished", num_epochs)
                 self.logger.info("Best epoch was epoch %d with a Wasserstein distance of %.5f", 
                                  self.best_epoch, self.test_w_distance)
-                iterator.close()
+                tqdm_dataloader.close()
                 break
 
             if normalise_data:
