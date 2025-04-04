@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>epicgan package &mdash; epicgan 1.0 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="cmepda_exam" href="modules.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> epicgan
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">cmepda_exam</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">epicgan package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-epicgan.training">epicgan.training module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-epicgan.evaluate_performance">epicgan.evaluate_performance module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-epicgan.data_proc">epicgan.data_proc module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-epicgan.performance_metrics">epicgan.performance_metrics module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-epicgan.evaluation">epicgan.evaluation module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-epicgan.models">epicgan.models module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-epicgan.utils">epicgan.utils module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-epicgan">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">epicgan</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="modules.html">cmepda_exam</a> &raquo;</li>
+      <li>epicgan package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/epicgan.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="epicgan-package">
+<h1>epicgan package<a class="headerlink" href="#epicgan-package" title="Permalink to this headline"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline"></a></h2>
+</section>
+<section id="module-epicgan.training">
+<span id="epicgan-training-module"></span><h2>epicgan.training module<a class="headerlink" href="#module-epicgan.training" title="Permalink to this headline"></a></h2>
+<p>The class defined here is a trainable model. It has a method that
+performs the training and a method that performs the evaluation.
+Due to the sheer amount of variables the ones that are usually not changed
+are implemented as kwargs.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="epicgan.training.TrainableModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">epicgan.training.</span></span><span class="sig-name descname"><span class="pre">TrainableModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_suffix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/training.html#TrainableModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.training.TrainableModel" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A class incorporating the GAN model. It has a method training() that performs the training
+and a method evaluation() that performs the evaluation.
+When running the training, ensure the location from where you run it has the following folders
+and contents:
+1. The specified dataset is stored in folder ‘JetNet_datasets’ in ‘.hdf5’-format
+2. There is a folder ‘saved_models’, the best model will be stored here
+3. There is a folder ‘logbooks’, the logfile will be stored here; the log-filename is a concate-
+nation of the dataset-name and the specified ‘file_suffix’</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset_name</strong> (<em>str</em>) – dataset specification</p></li>
+<li><p><strong>n_points</strong> (<em>int</em>) – number of particles per jet, either 30 or 150</p></li>
+<li><p><strong>batch_size</strong> (<em>int</em><em>, </em><em>default: 128</em>) – batch size used for the training</p></li>
+<li><p><strong>rng</strong> (<em>np.random.Generator</em><em>, </em><em>default: None</em>) – random number generator used for shuffling throughout the training;
+if equal to None, data will not be shuffled</p></li>
+<li><p><strong>file_suffix</strong> (<em>str</em><em>, </em><em>default: None</em>) – suffix added to the logfile name and the filename of the model that
+will be saved; if None, defaults to “main”</p></li>
+<li><p><strong>load</strong> (<em>bool</em><em>, </em><em>default: False</em>) – if True, tries to initialise the model by loading a model according
+to load_file_name</p></li>
+<li><p><strong>load_file_name</strong> (<em>str</em><em>, </em><em>default: None</em>) – file name from which to load the model; needs to be specified whenever
+load is set to True</p></li>
+<li><p><strong>**w_dist_per_iter</strong> (<em>bool</em><em>, </em><em>default: False</em>) – if True, the dictionary returned by training method contains a list of the
+Wasserstein distances between true data and generated events for every
+iteration (computed in the discriminator training step)</p></li>
+<li><p><strong>**dim_particle</strong> (<em>int</em><em>, </em><em>default: 3</em>) – dimension of the particle space, default 3 are [p_t, eta, phi]</p></li>
+<li><p><strong>**dim_global</strong> (<em>int</em><em>, </em><em>default: 10</em>) – dimension of the global variable space within the networks</p></li>
+<li><p><strong>**num_epic_layers_gen</strong> (<em>int</em><em>, </em><em>default: 6</em>) – number of EPiC-layers in the generator</p></li>
+<li><p><strong>**num_epic_layers_dis</strong> (<em>int</em><em>, </em><em>default: 3</em>) – number of EPiC-layers in the discriminator</p></li>
+<li><p><strong>**norm_sigma</strong> (<em>float</em><em>, </em><em>default: 5.</em>) – used to normalise data to this std</p></li>
+<li><p><strong>**beta_1</strong> (<em>float</em><em>, </em><em>default: 0.9</em>) – beta_1 parameter of the (Adam) optimizers</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="epicgan.training.TrainableModel.discriminator_training">
+<span class="sig-name descname"><span class="pre">discriminator_training</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'BCE'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/training.html#TrainableModel.discriminator_training"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.training.TrainableModel.discriminator_training" title="Permalink to this definition"></a></dt>
+<dd><p>This function performs the discriminator training</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>torch.Tensor</em>) – data batch of size local_batch_size to use for training step</p></li>
+<li><p><strong>local_batch_size</strong> (<em>int</em>) – number of samples in data, equals self.batch_size most of the time,
+but can be smaller when number of samples for every effective particle
+multiplicity is not divisible by self.batch_size</p></li>
+<li><p><strong>loss</strong> (<em>str</em><em>, </em><em>default: &quot;BCE&quot;</em>) – defines which loss to use, either binary cross entropy (“BCE”) or
+least-squares-GAN loss (“LS-GAN”)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="epicgan.training.TrainableModel.evaluate">
+<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">make_plots</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_plots</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_result_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/training.html#TrainableModel.evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.training.TrainableModel.evaluate" title="Permalink to this definition"></a></dt>
+<dd><p>Computes the evaluation scores and optionally the evaluation plots that are given in
+the EPiC-GAN paper.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>make_plots</strong> (<em>bool</em><em>, </em><em>default: True</em>) – if True, evaluation plots are made</p></li>
+<li><p><strong>save_plots</strong> (<em>bool</em><em>, </em><em>default: True</em>) – if True, evaluation plots are saved to .png-file save_file_name in folder “saved_plots”</p></li>
+<li><p><strong>save_result_dict</strong> (<em>bool  default: False</em>) – if True, result dictionary is saved to .pkl-file named “eval_scores” + save_file_name
+in folder dict_save_folder (can be specified as kwarg)</p></li>
+<li><p><strong>**batch_size_gen</strong> (<em>int</em><em>, </em><em>default: 500</em>) – batch size at which noise samples are passed through the generator</p></li>
+<li><p><strong>**n_tot_generation</strong> (<em>int</em><em>, </em><em>default: 300000</em>) – number of samples generated for each validation step</p></li>
+<li><p><strong>**runs</strong> (<em>int</em><em>, </em><em>default: 10</em>) – number of comparison runs for each validation step
+make sure n_tot_generation/runs is larger than the length of validation and test set</p></li>
+<li><p><strong>**set_min_pt</strong> (<em>bool</em><em>, </em><em>default: True</em>) – if True, sets p_t coordinates of generated events to minimum value found in training set</p></li>
+<li><p><strong>**order_by_pt</strong> (<em>bool</em><em>, </em><em>default: True</em>) – if True, orders particles by p_t in validation loops</p></li>
+<li><p><strong>**normalise_data</strong> (<em>bool</em><em>, </em><em>default: True</em>) – if True, normalises generated events in validation to mean &amp; std of training set</p></li>
+<li><p><strong>**center_gen</strong> (<em>bool</em><em>, </em><em>default: True</em>) – if True, centers the eta- and phi-coordinates of generated events in validation</p></li>
+<li><p><strong>**dict_save_folder</strong> (<em>str</em><em>, </em><em>default: &quot;saved_models&quot;</em>) – folder where to store the result dictionary</p></li>
+<li><p><strong>**name_plots</strong> (<em>str</em><em>, </em><em>default: dataset_name</em><em> (</em><em>specified in initialisation</em><em>)</em>) – label that will appear in the plots</p></li>
+<li><p><strong>**save_file_name</strong> (<em>str</em><em>, </em><em>default: dataset_name + file_suffix</em><em> (</em><em>both specified in initialisation</em><em>)</em>) – file name to which result dictionary and/or plots will be stored</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>result_dict</strong> (<em>dict</em>) – dictionary containing the evaluation scores, keys: “w_mass_mean”, “w_mass_std”,
+“w_coords_mean”, “w_coords_std”, “w_efps_mean”, “w_efps_std”
+they refer to mean and standard deviation of the Wasserstein distances between real and
+generated events using the mass distribution, the particle feature distributions p_t,
+eta, phi (mean over those) and the distributions of the energyflow polynomials (mean
+over those, see <a class="reference external" href="https://energyflow.network/docs/efp/">https://energyflow.network/docs/efp/</a>)</p></li>
+<li><p><strong>fig</strong> (<em>matplotlib.figure, optional</em>) – the evaluation plots</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="epicgan.training.TrainableModel.generate">
+<span class="sig-name descname"><span class="pre">generate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_generation</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/training.html#TrainableModel.generate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.training.TrainableModel.generate" title="Permalink to this definition"></a></dt>
+<dd><p>Generates n_generation events.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_generation</strong> (<em>int</em>) – number of events to be generated</p></li>
+<li><p><strong>**batch_size_gen</strong> (<em>int</em><em>, </em><em>default: 500</em>) – batch size at which noise samples are passed through the generator</p></li>
+<li><p><strong>**set_min_pt</strong> (<em>bool</em><em>, </em><em>default: True</em>) – if True, sets p_t coordinates of generated events to minimum value found in training set</p></li>
+<li><p><strong>**order_by_pt</strong> (<em>bool</em><em>, </em><em>default: False</em>) – if True, orders particles by p_t within jets</p></li>
+<li><p><strong>**normalise_data</strong> (<em>bool</em><em>, </em><em>default: True</em>) – if True, normalises generated events to mean &amp; std of training set; if False, output is
+direct generator output (approx. normalised to mean 0, std norm_sigma, defined in object
+instantiation, for each feature)</p></li>
+<li><p><strong>**center_gen</strong> (<em>bool</em><em>, </em><em>default: True</em>) – if True, centers the eta- and phi-coordinates of generated events</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="epicgan.training.TrainableModel.generator_training">
+<span class="sig-name descname"><span class="pre">generator_training</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">local_batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'BCE'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/training.html#TrainableModel.generator_training"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.training.TrainableModel.generator_training" title="Permalink to this definition"></a></dt>
+<dd><p>This function performs the generator training</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>local_batch_size</strong> (<em>int</em>) – number of samples in data used for discriminator training, equals
+self.batch_size most of the time, but can be smaller when number of
+samples for every effective particle multiplicity is not divisible
+by self.batch_size</p></li>
+<li><p><strong>loss</strong> (<em>str</em><em>, </em><em>default: &quot;BCE&quot;</em>) – defines which loss to use, either binary cross entropy (“BCE”) or
+least-squares-GAN loss (“LS-GAN”)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="epicgan.training.TrainableModel.training">
+<span class="sig-name descname"><span class="pre">training</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_epochs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'BCE'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_result_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/training.html#TrainableModel.training"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.training.TrainableModel.training" title="Permalink to this definition"></a></dt>
+<dd><p>This function performs the actual training of the specified model.
+As optimizers for both generator and discriminator Adam is used. The
+returns are contained in a dictionary with the results specified here
+being the keys (as strings).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>num_epochs</strong> (<em>int</em>) – number of epochs for which to run training</p></li>
+<li><p><strong>loss</strong> (<em>str</em><em>, </em><em>default: &quot;BCE&quot;</em>) – whether to use binary cross entropy (“BCE”) or least-squares-GAN loss
+(“LS-GAN”) for training; defaults to “BCE”</p></li>
+<li><p><strong>save_result_dict</strong> (<em>bool</em><em>, </em><em>default: False</em>) – if True, dictionary containing results is stored to a .pkl-file with
+name dataset_name + “_training_” + file_suffix in folder saved_models. Differing file_suffix
+can be specified with keyword ‘save_file_suffix’. Differing folder
+can be specified with keyword ‘dict_save_folder’.</p></li>
+<li><p><strong>**save_file_suffix</strong> (<em>str</em><em>, </em><em>default: file_suffix</em><em> (</em><em>specified in object initialisation</em><em>)</em>) – dictionary containing results will be stored to .pkl-file with name
+dataset_name + “_training_” + save_file_suffix</p></li>
+<li><p><strong>**dict_save_folder</strong> (<em>str</em><em>, </em><em>default: &quot;saved_models&quot;</em>) – folder where to store the result dictionary</p></li>
+<li><p><strong>**lr_gen</strong> (<em>float</em><em>, </em><em>default: 1e-4</em>) – sets the learning rate of the generator</p></li>
+<li><p><strong>**lr_dis</strong> (<em>float</em><em>, </em><em>default: 1e-4</em>) – sets the learning rate of the discriminator</p></li>
+<li><p><strong>**n_tot_generation</strong> (<em>int</em><em>, </em><em>default: 300000</em>) – number of samples generated for each validation step</p></li>
+<li><p><strong>**runs</strong> (<em>int</em><em>, </em><em>default: 10</em>) – number of comparison runs for each validation step
+make sure n_tot_generation/runs is larger than the length of validation and test set</p></li>
+<li><p><strong>**batch_size_gen</strong> (<em>int</em><em>, </em><em>default: 500</em>) – batch size at which noise samples are passed through the generator</p></li>
+<li><p><strong>**set_min_pt</strong> (<em>bool</em><em>, </em><em>default: True</em>) – if True, sets p_t coordinates of generated events to minimum value found in training set</p></li>
+<li><p><strong>**order_by_pt</strong> (<em>bool</em><em>, </em><em>default: True</em>) – if True, orders particles by p_t in validation loops</p></li>
+<li><p><strong>**normalise_data</strong> (<em>bool</em><em>, </em><em>default: True</em>) – if True, normalises generated events in validation to mean &amp; std of training set</p></li>
+<li><p><strong>**center_gen</strong> (<em>bool</em><em>, </em><em>default: True</em>) – if True, centers the eta- and phi-coordinates of generated events in validation</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p><strong>result_dict</strong> –</p>
+<dl class="simple">
+<dt>dictionary with the following keys and values:</dt><dd><dl class="simple">
+<dt>best_w_distance: float</dt><dd><p>Wasserstein distance score on the test set for the best epoch</p>
+</dd>
+<dt>best_epoch: int</dt><dd><p>epoch for which the Wasserstein score on the validation set was lowest</p>
+</dd>
+<dt>mean_loss_dis_list: list</dt><dd><p>list of all the average loss values of the discriminator training</p>
+</dd>
+<dt>mean_loss_gen_list: list</dt><dd><p>list of all the average loss values of the generator training</p>
+</dd>
+<dt>w_dist_list: list</dt><dd><p>list of all the Wasserstein distance scores on the validation set</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="epicgan.training.TrainableModel.validation_loop">
+<span class="sig-name descname"><span class="pre">validation_loop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_tot_generation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size_gen</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">set_min_pt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order_by_pt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalise_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">center_gen</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/training.html#TrainableModel.validation_loop"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.training.TrainableModel.validation_loop" title="Permalink to this definition"></a></dt>
+<dd><p>Performs a single validation loop, i.e.creates n_tot_generation fake events and computes
+the Wasserstein distance between the mass distributions of the validation set and an equal
+amount of fake events ‘runs’ times (for different fake samples). The validation score is the
+mean over the values computed. If it is lower than the previously lowest validation score,
+the epoch is accepted as the new best epoch and the same computation is repeated using the
+test instead of the validation set. The resulting score is stored.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_tot_generation</strong> (<em>int</em>) – number of samples generated for the validation step</p></li>
+<li><p><strong>runs</strong> (<em>int</em>) – number of comparison runs for the validation step
+make sure n_tot_generation/runs is larger than the length of validation and test set</p></li>
+<li><p><strong>batch_size_gen</strong> (<em>int</em>) – batch size at which noise samples are passed through the generator</p></li>
+<li><p><strong>set_min_pt</strong> (<em>bool</em>) – if True, sets p_t coordinates of generated events to minimum value found in training set</p></li>
+<li><p><strong>order_by_pt</strong> (<em>bool</em><em>, </em><em>default: True</em>) – if True, orders particles by p_t</p></li>
+<li><p><strong>normalise_data</strong> (<em>bool</em><em>, </em><em>default: True</em>) – if True, normalises generated events in validation to mean &amp; std of training set</p></li>
+<li><p><strong>center_gen</strong> (<em>bool</em><em>, </em><em>default: True</em>) – if True, centers the eta- and phi-coordinates of generated events in validation</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-epicgan.evaluate_performance">
+<span id="epicgan-evaluate-performance-module"></span><h2>epicgan.evaluate_performance module<a class="headerlink" href="#module-epicgan.evaluate_performance" title="Permalink to this headline"></a></h2>
+<p>This script defines a function that evaluates performance of a trained network.
+Make sure that the hard-coded parameters that define the network architecture match
+the model you want to load.
+Due to the sheer amount of variables the ones that are usually not changed
+are implemented as kwargs.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="epicgan.evaluate_performance.evaluate_performance">
+<span class="sig-prename descclassname"><span class="pre">epicgan.evaluate_performance.</span></span><span class="sig-name descname"><span class="pre">evaluate_performance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">make_plots</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_plots</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_result_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/evaluate_performance.html#evaluate_performance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.evaluate_performance.evaluate_performance" title="Permalink to this definition"></a></dt>
+<dd><p>Function that evaluates a stored network. It has an option to make the plots
+that are in the original EPiC-GAN paper and save them to a .png-file.
+If the network structure differs from the default, make sure to give the
+respective kwargs.
+When running the evaluation, ensure the place from where you run the training
+has the following folders and contents:
+1. The specified dataset is stored in folder ‘JetNet_datasets’ in ‘.hdf5’-format
+2. There is a folder ‘saved_models’ where the model you want to load is stored
+3. There is a folder ‘logbooks’, the logfile will be stored here</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset_name</strong> – specifies the dataset</p></li>
+<li><p><strong>model_name</strong> (<em>str</em>) – model specification; must exist in folder ‘saved_models’; will also be
+added as suffix to the logfile-name</p></li>
+<li><p><strong>n_points</strong> (<em>int</em>) – number of particles per jet, either 30 or 150</p></li>
+<li><p><strong>make_plots</strong> (<em>bool</em><em>, </em><em>default: True</em>) – if True, the plots that are in the original EPiC-GAN paper will be made</p></li>
+<li><p><strong>save_plots</strong> (<em>bool</em><em>, </em><em>default: True</em>) – if True, plots will be saved to folder saved_plots with name save_file_name
+as a .png-file.</p></li>
+<li><p><strong>save_result_dict</strong> (<em>bool</em><em>, </em><em>default: False</em>) – if True, dictionary containing results is stored to a .pkl-file with
+name dataset_name + “_evaluation_” + save_file_name in folder saved_models.</p></li>
+<li><p><strong>save_file_name</strong> (<em>str</em><em>, </em><em>default: None</em>) – filename of the plots that will be saved, if make_plots is True;
+if None, plots will not be saved</p></li>
+<li><p><strong>rng</strong> (<em>np.random.Generator</em><em>, </em><em>default: None</em>) – random number generator used for shuffling data; if equal to None, no
+shuffling will be performed</p></li>
+<li><p><strong>**model_folder</strong> (<em>str</em><em>, </em><em>default: &quot;saved_models&quot;</em>) – folder, where the model to be loaded is stored</p></li>
+<li><p><strong>**dim_particle</strong> (<em>int</em><em>, </em><em>default: 3</em>) – dimension of the particle space, default 3 are [p_t, eta, phi]</p></li>
+<li><p><strong>**dim_global</strong> (<em>int</em><em>, </em><em>default: 10</em>) – dimension of the global variable space within the networks</p></li>
+<li><p><strong>**num_epic_layers_gen</strong> (<em>int</em><em>, </em><em>default: 6</em>) – number of EPiC-layers in the generator</p></li>
+<li><p><strong>**num_epic_layers_dis</strong> (<em>int</em><em>, </em><em>default: 3</em>) – number of EPiC-layers in the discriminator</p></li>
+<li><p><strong>**norm_sigma</strong> (<em>float</em><em>, </em><em>default: 5.</em>) – used to normalise data to this std</p></li>
+<li><p><strong>**n_tot_generation</strong> (<em>int</em><em>, </em><em>default: 300000</em>) – number of samples generated for computing each evaluation score</p></li>
+<li><p><strong>**runs</strong> (<em>int</em><em>, </em><em>default: 10</em>) – number of comparison runs for each evaluation score
+make sure n_tot_generation/runs is larger than the length of the test set</p></li>
+<li><p><strong>**batch_size_gen</strong> (<em>int</em><em>, </em><em>default: 500</em>) – batch size at which noise samples are passed through the generator</p></li>
+<li><p><strong>**set_min_pt</strong> (<em>bool</em><em>, </em><em>default: True</em>) – If True, sets p_t coordinates of generated events to minimum value found in training set.</p></li>
+<li><p><strong>**order_by_pt</strong> (<em>bool</em><em>, </em><em>default: True</em>) – If True, orders particles by p_t in generated events and test data.</p></li>
+<li><p><strong>**normalise_data</strong> (<em>bool</em><em>, </em><em>default: True</em>) – If True, normalises generated events to mean &amp; std of training set</p></li>
+<li><p><strong>**center_gen</strong> (<em>bool</em><em>, </em><em>default: True</em>) – If True, centers the eta- and phi-coordinates of generated events</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>result_dict</strong> (<em>dict</em>) – dictionary containing the evaluation scores, keys: “w_mass_mean”, “w_mass_std”,
+“w_coords_mean”, “w_coords_std”, “w_efps_mean”, “w_efps_std”
+they refer to mean and standard deviation of the Wasserstein distances between real and
+generated events using the mass distribution, the particle feature distributions p_t,
+eta, phi (mean over those) and the distributions of the energyflow polynomials (mean
+over those, see <a class="reference external" href="https://energyflow.network/docs/efp/">https://energyflow.network/docs/efp/</a>)</p></li>
+<li><p><strong>fig</strong> (<em>matplotlib.figure, optional</em>) – the evaluation plots</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="epicgan.evaluate_performance.evaluation_scores_plots">
+<span class="sig-prename descclassname"><span class="pre">epicgan.evaluate_performance.</span></span><span class="sig-name descname"><span class="pre">evaluation_scores_plots</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">real_jets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fake_jets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">make_plots</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name_plots</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_plots</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_result_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/evaluate_performance.html#evaluation_scores_plots"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.evaluate_performance.evaluation_scores_plots" title="Permalink to this definition"></a></dt>
+<dd><p>Computes the evaluation scores and optionally the evaluation plots for given real and fake data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>real_jets</strong> (<em>np.array</em>) – set of events</p></li>
+<li><p><strong>fake_jets</strong> (<em>np.array</em>) – set of events; make sure it has length greater or equal to
+len(real_jets)*runs</p></li>
+<li><p><strong>make_plots</strong> (<em>bool</em><em>, </em><em>default: True</em>) – if True, the plots that are in the original EPiC-GAN paper will be made</p></li>
+<li><p><strong>name_plots</strong> (<em>str</em><em>, </em><em>default: None</em>) – label that will appear in the plots; if None, defaults to “main”</p></li>
+<li><p><strong>save_plots</strong> (<em>bool</em><em>, </em><em>default: True</em>) – if True, plots will be saved to folder saved_plots with name save_file_name
+as a .png-file.</p></li>
+<li><p><strong>save_result_dict</strong> (<em>bool</em><em>, </em><em>default: False</em>) – if True, dictionary containing results is stored to a .pkl-file with
+name “eval_scores_” + save_file_name in folder saved_models. Folder can be
+changed by specifying keyword ‘dict_save_folder’.</p></li>
+<li><p><strong>save_file_name</strong> (<em>str</em><em>, </em><em>default: None</em>) – filename of the plots and/or result dictionary that will be saved.</p></li>
+<li><p><strong>rng</strong> (<em>np.random.Generator</em><em>, </em><em>default: None</em>) – random number generator used for shuffling when computing evaluation scores; if None, no
+shuffling is performed.</p></li>
+<li><p><strong>**dict_save_folder</strong> (<em>str</em><em>, </em><em>default: &quot;saved_models&quot;</em>) – folder where to store the result dictionary</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>result_dict</strong> (<em>dict</em>) – dictionary containing the evaluation scores, keys: “w_mass_mean”, “w_mass_std”,
+“w_coords_mean”, “w_coords_std”, “w_efps_mean”, “w_efps_std”
+they refer to mean and standard deviation of the Wasserstein distances between real and
+generated events using the mass distribution, the particle feature distributions p_t,
+eta, phi (mean over those) and the distributions of the energyflow polynomials (mean
+over those, see <a class="reference external" href="https://energyflow.network/docs/efp/">https://energyflow.network/docs/efp/</a>)</p></li>
+<li><p><strong>fig</strong> (<em>matplotlib.figure, optional</em>) – the evaluation plots</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="epicgan.evaluate_performance.plot_overview">
+<span class="sig-prename descclassname"><span class="pre">epicgan.evaluate_performance.</span></span><span class="sig-name descname"><span class="pre">plot_overview</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">test_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generated_events</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_points</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kde</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size_gen</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_tot_generation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">300000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim_global</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim_particle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order_by_pt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">set_min_pt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_pt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">center_gen</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalise_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">means</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([0.,</span> <span class="pre">0.,</span> <span class="pre">0.])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([1.,</span> <span class="pre">1.,</span> <span class="pre">1.])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm_sigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cuda'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/evaluate_performance.html#plot_overview"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.evaluate_performance.plot_overview" title="Permalink to this definition"></a></dt>
+<dd><p>This function makes the 9 plots that are given for each dataset in the original EPiC-GAN paper.
+It does NOT save them.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>test_set</strong> (<em>np.array</em>) – set of samples from original dataset to use for evaluation</p></li>
+<li><p><strong>datset_name</strong> (<em>str</em>) – name used in labels of plots;</p></li>
+<li><p><strong>generated_events</strong> (<em>np.array</em><em>, </em><em>default: None</em>) – generated events to use for evaluation; IF SPECIFIED, ALL OF THE FOLLOWING
+ARGUMENTS ARE REDUNDANT</p></li>
+<li><p><strong>generator</strong> (<a class="reference internal" href="#epicgan.models.Generator" title="epicgan.models.Generator"><em>epicgan.models.Generator</em></a>) – generator network with which to perform the event generation; needs to be specified
+when generated_events is None</p></li>
+<li><p><strong>n_points</strong> (<em>int</em>) – number of particles per jet, 30 or 150; needs to be specified when
+generated_events is None</p></li>
+<li><p><strong>kde</strong> (<em>scipy.stats.gaussian_kde</em>) – kernel density estimation of n_eff for the dataset</p></li>
+<li><p><strong>batch_size_gen</strong> (<em>int</em><em>, </em><em>default: 500</em>) – batch size at which noise samples are passed through the generator</p></li>
+<li><p><strong>n_tot_generation</strong> (<em>int</em><em>, </em><em>default: 300000</em>) – number of points that will be sampled from kde</p></li>
+<li><p><strong>dim_global</strong> (<em>int</em><em>, </em><em>default: 10</em>) – dimension of the space of global variables in the network</p></li>
+<li><p><strong>dim_particle</strong> (<em>int</em><em>, </em><em>default: 3</em>) – dimension of the space of particle features</p></li>
+<li><p><strong>rng</strong> (<em>np.random.Generator</em><em>, </em><em>default: None</em>) – random number generator used for kde-resampling; please note that
+resampling of kde needs a random number generator, it will default to
+np.random, if None is given</p></li>
+<li><p><strong>order_by_pt</strong> (<em>bool</em><em>, </em><em>default: True</em>) – if True, the particles within each generated fake jet will be ordered by
+p_t in descending order</p></li>
+<li><p><strong>set_min_pt</strong> (<em>bool</em><em>, </em><em>default: True</em>) – if True, all generated particles will be enforced to have p_t of at least
+the value specified in min_pt</p></li>
+<li><p><strong>min_pt</strong> (<em>int</em><em> or </em><em>float</em><em>, </em><em>default: 0</em>) – minimum value to which all p_t below will be set, if set_min_pt is True</p></li>
+<li><p><strong>center_gen</strong> (<em>bool</em><em>, </em><em>default: True</em>) – if True, the eta- and phi-coordinates of the generated events will be
+centered</p></li>
+<li><p><strong>normalise_data</strong> (<em>bool</em><em>, </em><em>default: True</em>) – if True, the generated events will be renormalised to have the statistical
+properties of the training set</p></li>
+<li><p><strong>means</strong> (<em>list</em><em> or </em><em>np.array</em><em>, </em><em>default: np.zeros</em><em>(</em><em>3</em><em>)</em>) – mean value for each particle feature to which to renormalise the generated events</p></li>
+<li><p><strong>stds</strong> (<em>list</em><em> or </em><em>np.array</em><em>, </em><em>default: np.ones</em><em>(</em><em>3</em><em>)</em>) – standard deviation value for each particle feature to which to renormalise
+the generated events</p></li>
+<li><p><strong>norm_sigma</strong> (<em>float</em><em> or </em><em>int</em><em>, </em><em>default: 1</em>) – std-value to which the real input data was normalised</p></li>
+<li><p><strong>device</strong> (<em>str</em><em>, </em><em>default: &quot;cuda&quot;</em>) – device to which to send variables</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>fig</strong> – figure containing the 9 plots</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>matplotlib.figure</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-epicgan.data_proc">
+<span id="epicgan-data-proc-module"></span><h2>epicgan.data_proc module<a class="headerlink" href="#module-epicgan.data_proc" title="Permalink to this headline"></a></h2>
+<p>Implementing features regarding data processing</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="epicgan.data_proc.PreparedDataset">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">epicgan.data_proc.</span></span><span class="sig-name descname"><span class="pre">PreparedDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/data_proc.html#PreparedDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.data_proc.PreparedDataset" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.dataset.IterableDataset</span></code></p>
+<p>A class preparing the dataset for training. The batches defined in method define_batches()
+contain events of equal effective particle multiplicity n_eff, i.e. equal number of particles
+that are not zero-padded. The __iter__-method was overrode s.t. if rng is given the batches are
+yielded in random order and after each cycle the dataset is reshuffled and the batches are re-
+defined. If rng is None, the batches are yielded in ascending order in n_eff and for each cycle
+the same batches are yielded in the same order.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset</strong> (<em>np.array</em>) – dataset over which to iterate</p></li>
+<li><p><strong>batch_size</strong> (<em>int</em><em>, </em><em>default: 128</em>) – batch size to be returned by an associated iterator</p></li>
+<li><p><strong>rng</strong> (<em>np.random.Generator</em><em>, </em><em>default: None</em>) – random number generator used for shuffling; if equal to None, data
+will not be shuffled</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="epicgan.data_proc.PreparedDataset.define_batches">
+<span class="sig-name descname"><span class="pre">define_batches</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/data_proc.html#PreparedDataset.define_batches"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.data_proc.PreparedDataset.define_batches" title="Permalink to this definition"></a></dt>
+<dd><p>Makes batches of equal effective particle multiplicity n_eff and
+size self.batch_size or less for remaining samples.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="epicgan.data_proc.PreparedDataset.num_iter_per_ep">
+<span class="sig-name descname"><span class="pre">num_iter_per_ep</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/data_proc.html#PreparedDataset.num_iter_per_ep"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.data_proc.PreparedDataset.num_iter_per_ep" title="Permalink to this definition"></a></dt>
+<dd><p>Gives as output the number of iterations needed to complete an
+epoch given the specified batch size.
+Note that training is performed on batches each containing jets with equal
+number of particles with p_t != 0, meaning there can (and most likely will)
+be more than one batch of batch size &lt; self.batch_size.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>num_iters</strong> – number of iterations required to complete an epoch</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="epicgan.data_proc.compute_kde">
+<span class="sig-prename descclassname"><span class="pre">epicgan.data_proc.</span></span><span class="sig-name descname"><span class="pre">compute_kde</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/data_proc.html#compute_kde"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.data_proc.compute_kde" title="Permalink to this definition"></a></dt>
+<dd><p>Computes the kernel density estimation of n_eff (number of particles
+with nonzero p_t) for the given dataset</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>dataset_name</strong> (<em>str</em>) – specifies the dataset for which to load the kde</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>kde</strong> – gaussian_kde-object containing the specified kde</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>scipy.stats.gaussian_kde</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="epicgan.data_proc.dataset_properties">
+<span class="sig-prename descclassname"><span class="pre">epicgan.data_proc.</span></span><span class="sig-name descname"><span class="pre">dataset_properties</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset_train</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/data_proc.html#dataset_properties"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.data_proc.dataset_properties" title="Permalink to this definition"></a></dt>
+<dd><p>Computes mean, standard deviation, minmum value and maximum value for
+each particle feature not considering particles that were zero-padded.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>dataset_train</strong> (<em>np.ndarray</em>) – the dataset to be evaluated, usually the training set</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>means</strong> (<em>list</em>) – contains the mean value of each particles feature</p></li>
+<li><p><strong>stds</strong> (<em>list</em>) – contains the standard deviation of each particle feature</p></li>
+<li><p><strong>mins</strong> (<em>list</em>) – contains the minimum value of each particle feature</p></li>
+<li><p><strong>maxs</strong> (<em>list</em>) – contains the maximum value of each particle feature</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="epicgan.data_proc.get_dataset">
+<span class="sig-prename descclassname"><span class="pre">epicgan.data_proc.</span></span><span class="sig-name descname"><span class="pre">get_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reorder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/data_proc.html#get_dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.data_proc.get_dataset" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the specified dataset as a np.ndarray.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset_path</strong> (<em>str</em>) – path to the object to be loaded</p></li>
+<li><p><strong>drop_mask</strong> (<em>bool</em><em>, </em><em>default = True</em>) – if True, the fourth particle feature of the datasets “mask” will be dropped</p></li>
+<li><p><strong>reorder</strong> (<em>bool</em><em>, </em><em>default = True</em>) – if True, the particle features will be ordered [p_t, eta, phi]; should
+always be set to False, when drop_mask is False</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>dataset</strong> – contains the dataset specified in dataset_name</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="epicgan.data_proc.get_dataset_path">
+<span class="sig-prename descclassname"><span class="pre">epicgan.data_proc.</span></span><span class="sig-name descname"><span class="pre">get_dataset_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/data_proc.html#get_dataset_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.data_proc.get_dataset_path" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the path to the specified dataset. The folder is hard-coded, please
+change to the folder where the dataset hdf5-files are stored.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>dataset_name</strong> (<em>str</em>) – specification of the dataset, either “gluon30”, “quark30”, “top30”,
+“gluon150”, “quark150” or “top150”</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>path</strong> – path of the dataset in memory</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="epicgan.data_proc.get_kde">
+<span class="sig-prename descclassname"><span class="pre">epicgan.data_proc.</span></span><span class="sig-name descname"><span class="pre">get_kde</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/data_proc.html#get_kde"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.data_proc.get_kde" title="Permalink to this definition"></a></dt>
+<dd><p>Loads the (precomputed) kernel density estimation of n_eff (number of particles
+with nonzero p_t) for the given dataset</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>dataset_name</strong> (<em>str</em>) – specifies the dataset for which to load the kde</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>kde</strong> – gaussian_kde-object containing the specified kde</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>scipy.stats.gaussian_kde</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="epicgan.data_proc.get_noise">
+<span class="sig-prename descclassname"><span class="pre">epicgan.data_proc.</span></span><span class="sig-name descname"><span class="pre">get_noise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim_global</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim_particle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cuda'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/data_proc.html#get_noise"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.data_proc.get_noise" title="Permalink to this definition"></a></dt>
+<dd><p>Samples the noise needed as input for the generator with mean 0 and standard
+deviation 1</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_points</strong> (<em>int</em>) – number of particles per jet to be generated; note that this refers to the
+number of non-zero-padded particles, it does not have to equal 30 or 150</p></li>
+<li><p><strong>batch_size</strong> (<em>int</em><em>, </em><em>default: 128</em>) – batch size to be sampled</p></li>
+<li><p><strong>dim_global</strong> (<em>int</em><em>, </em><em>default: 10</em>) – dimension of the space of global features</p></li>
+<li><p><strong>dim_local</strong> (<em>int</em><em>, </em><em>default: 3</em>) – dimension of the space of particle features</p></li>
+<li><p><strong>rng</strong> (<a class="reference internal" href="#epicgan.models.Generator" title="epicgan.models.Generator"><em>Generator</em></a><em>, </em><em>default: None</em>) – random number generator, specify this to ensure results are reproducible;
+if equals None, the default torch.Generator will be employed</p></li>
+<li><p><strong>device</strong> (<em>string</em><em>, </em><em>default: &quot;cuda&quot;</em>) – device to which to send variables</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>noise_global</strong> (<em>torch.Tensor</em>) – contains noise samples of shape [batch_size, dim_global]</p></li>
+<li><p><strong>noise_particle</strong> (<em>torch.Tensor</em>) – contains noise samples of shape [batch_size, n_points, dim_particle]</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="epicgan.data_proc.inverse_normalise_dataset">
+<span class="sig-prename descclassname"><span class="pre">epicgan.data_proc.</span></span><span class="sig-name descname"><span class="pre">inverse_normalise_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">means</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm_sigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/data_proc.html#inverse_normalise_dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.data_proc.inverse_normalise_dataset" title="Permalink to this definition"></a></dt>
+<dd><p>Normalises the given data to specified mean values standard deviations.
+Expected shape is [len_data, n_points, n_features]</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>np.array</em>) – contains data of expected shape [len_data, n_points, n_features]</p></li>
+<li><p><strong>means</strong> (<em>list</em><em> or </em><em>np.array</em>) – contains the output mean value for every feature</p></li>
+<li><p><strong>stds</strong> (<em>list</em><em> or </em><em>np.array</em>) – contains the output standard deviation for every feature</p></li>
+<li><p><strong>norm_sigma</strong> (<em>int</em><em> or </em><em>float</em><em>, </em><em>default: 5</em>) – standard deviation to which all of the input data is normalised</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>data</strong> – contains the dataset normalised to mean means and standard deviation stds.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="epicgan.data_proc.normalise_dataset">
+<span class="sig-prename descclassname"><span class="pre">epicgan.data_proc.</span></span><span class="sig-name descname"><span class="pre">normalise_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">means</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm_sigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/data_proc.html#normalise_dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.data_proc.normalise_dataset" title="Permalink to this definition"></a></dt>
+<dd><p>Normalises the given data to mean 0 and standard deviation norm_sigma.
+Expected shape is [len_data, n_points, n_features]</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>np.array</em>) – contains data of expected shape [len_data, n_points, n_features]</p></li>
+<li><p><strong>means</strong> (<em>list</em><em> or </em><em>np.array</em>) – contains the mean value for every feature, has shape [n_features]</p></li>
+<li><p><strong>stds</strong> (<em>list</em><em> or </em><em>np.array</em>) – contains the standard deviation for every feature, has shape [n_features]</p></li>
+<li><p><strong>norm_sigma</strong> (<em>int</em><em> or </em><em>float</em><em>, </em><em>default: 5</em>) – standard deviation to which all of the data is normalised</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>data</strong> – contains the normalised dataset</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="epicgan.data_proc.set_min_pt">
+<span class="sig-prename descclassname"><span class="pre">epicgan.data_proc.</span></span><span class="sig-name descname"><span class="pre">set_min_pt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_pt</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/data_proc.html#set_min_pt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.data_proc.set_min_pt" title="Permalink to this definition"></a></dt>
+<dd><p>Sets all values of 0 &lt; p_t &lt; min_pt within dataset to min_pt</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset</strong> (<em>np.array</em>) – dataset for which to perform the operation</p></li>
+<li><p><strong>min_pt</strong> (<em>float</em>) – minimum value to which to set all values of p_t lower than it</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>dataset</strong> – datset that has minimum p_t-value min_pt</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="epicgan.data_proc.split_dataset">
+<span class="sig-prename descclassname"><span class="pre">epicgan.data_proc.</span></span><span class="sig-name descname"><span class="pre">split_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">splits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0.7,</span> <span class="pre">0.15,</span> <span class="pre">0.15]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/data_proc.html#split_dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.data_proc.split_dataset" title="Permalink to this definition"></a></dt>
+<dd><p>Splits the dataset according to given splits. It is possible to
+pass random generator for shuffling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset</strong> (<em>np.array</em>) – dataset to be split</p></li>
+<li><p><strong>splits</strong> (<em>list</em><em>, </em><em>tuple</em><em> or </em><em>np.array</em><em>, </em><em>default:</em><em> [</em><em>0.7</em><em>, </em><em>0.15</em><em>, </em><em>0.15</em><em>]</em>) – fractions according to which the dataset is split into training set,
+validation set, test set; should contain 3 non-negative entries adding
+up to 1.</p></li>
+<li><p><strong>rng</strong> (<em>np.random.Generator</em><em>, </em><em>default: None</em>) – random number generator; if equals None, no shuffling will be performed</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>train_set</strong> (<em>np.array</em>) – dataset containing percentage of original dataset according to first
+entry of splits.</p></li>
+<li><p><strong>val_set</strong> (<em>np.array</em>) – dataset containing percentage of original dataset according to second
+entry of splits.</p></li>
+<li><p><strong>test_set</strong> (<em>np.array</em>) – dataset containing percentage of original dataset according to third
+entry of splits.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-epicgan.performance_metrics">
+<span id="epicgan-performance-metrics-module"></span><h2>epicgan.performance_metrics module<a class="headerlink" href="#module-epicgan.performance_metrics" title="Permalink to this headline"></a></h2>
+<p>Defines all the metrics that are employed to evaluate the performance.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="epicgan.performance_metrics.fpnd_score">
+<span class="sig-prename descclassname"><span class="pre">epicgan.performance_metrics.</span></span><span class="sig-name descname"><span class="pre">fpnd_score</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fake_jets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/performance_metrics.html#fpnd_score"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.performance_metrics.fpnd_score" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the mean Frechet ParticleNet distance and optionally the standard
+deviation between two sets of jets. Mean is computed over distances
+between real_jets and runs sets of samples from fake_jets of size
+num_samples.
+Employs jetnet.evaluation.fpnd(), which requires torch-cluster, which requires
+Python version &lt;= 3.10</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fake_jets</strong> (<em>np.array</em>) – set of events; make sure it has length greater or equal to
+num_samples*runs</p></li>
+<li><p><strong>num_samples</strong> (<em>int</em><em>, </em><em>default: 10000</em>) – number of samples from fake_jets used for computation of FPND at each
+iteration</p></li>
+<li><p><strong>runs</strong> (<em>int</em><em>, </em><em>default: 5</em>) – number of iterations/batches from fake_jets for computation of FPND</p></li>
+<li><p><strong>return_std</strong> (<em>bool</em><em>, </em><em>default: True</em>) – if True, function additionally returns the standard deviation</p></li>
+<li><p><strong>rng</strong> (<em>np.random.Generator</em><em>, </em><em>default: None</em>) – random number generator used for shuffling; if equal to None, no shuffling
+is performed</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>fpnd_array.mean()</strong> (<em>float</em>) – mean FPND between the sets of jets</p></li>
+<li><p><strong>fpnd_array.std()</strong> (<em>float, optional</em>) – standard deviation of the distribution of FPNDs</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="epicgan.performance_metrics.wasserstein_coords">
+<span class="sig-prename descclassname"><span class="pre">epicgan.performance_metrics.</span></span><span class="sig-name descname"><span class="pre">wasserstein_coords</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">real_jets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fake_jets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_zeros</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">avg_over_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/performance_metrics.html#wasserstein_coords"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.performance_metrics.wasserstein_coords" title="Permalink to this definition"></a></dt>
+<dd><p>Returns either the mean Wasserstein distances and optionally the standard
+deviations between the particle features of two sets of jets separately, or
+the mean of means and norm of standard deviations over the particle features.
+Means are computed over distances between real_jets and runs sets of
+samples from fake_jets each of size num_samples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>real_jets</strong> (<em>np.array</em>) – set of events</p></li>
+<li><p><strong>fake_jets</strong> (<em>np.array</em>) – set of events; make sure it has length greater or equal to
+num_samples*runs</p></li>
+<li><p><strong>exclude_zeros</strong> (<em>bool</em><em>, </em><em>default: True</em>) – if True, the function ignores zero-padded particles</p></li>
+<li><p><strong>num_samples</strong> (<em>int</em><em>, </em><em>default: 10000</em>) – number of samples from fake_jets used for computation of Wasserstein
+distance each iteration</p></li>
+<li><p><strong>runs</strong> (<em>int</em><em>, </em><em>default: 5</em>) – number of iterations/batches from fake_jets for computation of Wasserstein
+distance</p></li>
+<li><p><strong>avg_over_features</strong> (<em>bool</em><em>, </em><em>default: True</em>) – if True, the mean of all Wasserstein distance means and the norm of all
+standard deviations are returned</p></li>
+<li><p><strong>return_std</strong> (<em>bool</em><em>, </em><em>default: True</em>) – if True, function additionally returns the standard deviation</p></li>
+<li><p><strong>rng</strong> (<em>np.random.Generator</em><em>, </em><em>default: None</em>) – random number generator used for shuffling; if equal to None, no shuffling
+is performed</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>np.mean(means) or means</strong> (<em>float or list</em>) – mean Wasserstein distance(s) between the particle features; which one is
+returned is determined by argument avg_over_features</p></li>
+<li><p><strong>np.linalg.norm(stds) or stds</strong> (<em>float or list, optional</em>) – standard deviation(s) of the distributions of Wasserstein distances; which
+one is returned is determined by argument avg_over_features</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="epicgan.performance_metrics.wasserstein_efps">
+<span class="sig-prename descclassname"><span class="pre">epicgan.performance_metrics.</span></span><span class="sig-name descname"><span class="pre">wasserstein_efps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">real_jets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fake_jets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">efpset_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[('n==',</span> <span class="pre">4),</span> <span class="pre">('d==',</span> <span class="pre">4),</span> <span class="pre">('p==',</span> <span class="pre">1)]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">avg_over_efps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/performance_metrics.html#wasserstein_efps"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.performance_metrics.wasserstein_efps" title="Permalink to this definition"></a></dt>
+<dd><p>Returns either the mean Wasserstein distances and optionally the standard
+deviations between the energyflow polynomials of two sets of jets separately, or
+the mean of means and norm of standard deviations over the polynomials.
+Means are computed over distances between real_jets and runs sets of
+samples from fake_jets each of size num_samples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>real_jets</strong> (<em>np.array</em>) – set of events</p></li>
+<li><p><strong>fake_jets</strong> (<em>np.array</em>) – set of events; make sure it has length greater or equal to
+num_samples*runs</p></li>
+<li><p><strong>efpset_args</strong> (<em>list</em><em>, </em><em>default:</em><em> [</em><em>(</em><em>&quot;n==&quot;</em><em>, </em><em>4</em><em>)</em><em>, </em><em>(</em><em>&quot;d==&quot;</em><em>, </em><em>4</em><em>)</em><em>, </em><em>(</em><em>&quot;p==&quot;</em><em>, </em><em>1</em><em>)</em><em>]</em>) – list of arguments for computation of energyflow polynomials; for further
+details see <a class="reference external" href="https://jetnet.readthedocs.io/en/latest/pages/utils.html#jetnet.utils.efps">https://jetnet.readthedocs.io/en/latest/pages/utils.html#jetnet.utils.efps</a></p></li>
+<li><p><strong>num_samples</strong> (<em>int</em><em>, </em><em>default: 10000</em>) – number of samples from fake_jets used for computation of Wasserstein
+distance each iteration</p></li>
+<li><p><strong>runs</strong> (<em>int</em><em>, </em><em>default: 5</em>) – number of iterations/batches from fake_jets for computation of Wasserstein
+distance</p></li>
+<li><p><strong>avg_over_efps</strong> (<em>bool</em><em>, </em><em>default: True</em>) – if True, the mean of all Wasserstein distance means and the norm of all
+standard deviations are returned</p></li>
+<li><p><strong>return_std</strong> (<em>bool</em><em>, </em><em>default: True</em>) – if True, function additionally returns the standard deviation</p></li>
+<li><p><strong>rng</strong> (<em>np.random.Generator</em><em>, </em><em>default: None</em>) – random number generator used for shuffling; if equal to None, no shuffling
+is performed</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>np.mean(mean) or means</strong> (<em>float or list</em>) – mean Wasserstein distance(s) between the energyflow polynomials; which
+one is returned is determined by argument avg_over_efps</p></li>
+<li><p><strong>np.linalg.norm(stds) or stds</strong> (<em>float or list, optional</em>) – standard deviation(s) of the distributions of Wasserstein distances; which
+one is returned is determined by argument avg_over_efps</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="epicgan.performance_metrics.wasserstein_mass">
+<span class="sig-prename descclassname"><span class="pre">epicgan.performance_metrics.</span></span><span class="sig-name descname"><span class="pre">wasserstein_mass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">real_jets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fake_jets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/performance_metrics.html#wasserstein_mass"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.performance_metrics.wasserstein_mass" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the mean Wasserstein distance and optionally the standard deviation
+between the masses of two sets of jets. Mean is computed over distances
+between real_jets and runs sets of samples from fake_jets of size
+num_samples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>real_jets</strong> (<em>np.array</em>) – set of events</p></li>
+<li><p><strong>fake_jets</strong> (<em>np.array</em>) – set of events; make sure it has length greater or equal to
+num_samples*runs</p></li>
+<li><p><strong>num_samples</strong> (<em>int</em><em>, </em><em>default: 10000</em>) – number of samples from fake_jets used for computation of Wasserstein
+distance each iteration</p></li>
+<li><p><strong>runs</strong> (<em>int</em><em>, </em><em>default: 5</em>) – number of iterations/batches from fake_jets for computation of Wasserstein
+distance</p></li>
+<li><p><strong>return_std</strong> (<em>bool</em><em>, </em><em>default: True</em>) – if True, function additionally returns the standard deviation</p></li>
+<li><p><strong>rng</strong> (<em>np.random.Generator</em><em>, </em><em>default: None</em>) – random number generator used for shuffling; if equal to None, no shuffling
+is performed</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>wasserstein_dists.mean()</strong> (<em>float</em>) – mean Wasserstein distance between the sets of jets</p></li>
+<li><p><strong>wasserstein_dists.std()</strong> (<em>float, optional</em>) – standard deviation of the distribution of Wasserstein distances</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-epicgan.evaluation">
+<span id="epicgan-evaluation-module"></span><h2>epicgan.evaluation module<a class="headerlink" href="#module-epicgan.evaluation" title="Permalink to this headline"></a></h2>
+<p>Implementations of functions used for evaluation of the performance of the
+network.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="epicgan.evaluation.compute_wasserstein_distance">
+<span class="sig-prename descclassname"><span class="pre">epicgan.evaluation.</span></span><span class="sig-name descname"><span class="pre">compute_wasserstein_distance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">network</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kde</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size_gen</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_tot_generation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">300000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim_global</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim_particle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">set_min_pt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_pt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">center_gen</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order_by_pt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalise_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">means</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([0.,</span> <span class="pre">0.,</span> <span class="pre">0.])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([1.,</span> <span class="pre">1.,</span> <span class="pre">1.])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm_sigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cuda'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/evaluation.html#compute_wasserstein_distance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.evaluation.compute_wasserstein_distance" title="Permalink to this definition"></a></dt>
+<dd><p>Computes the Wasserstein distance between masses of the jets of the
+given dataset and generated jets. The return is the mean value of the
+Wasserstein distances for ‘runs’ number of generated jet datasets.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>network</strong> (<a class="reference internal" href="#epicgan.models.Generator" title="epicgan.models.Generator"><em>Generator</em></a>) – generator network with which to perform the evaluation</p></li>
+<li><p><strong>data_set</strong> (<em>np.array</em>) – dataset for which to perform the evaluation means</p></li>
+<li><p><strong>kde</strong> (<em>scipy.stats.gaussian_kde</em>) – kernel density estimation of n_eff for the dataset</p></li>
+<li><p><strong>batch_size_gen</strong> (<em>int</em><em>, </em><em>default: 500</em>) – batch size at which noise samples are passed through the generator</p></li>
+<li><p><strong>n_tot_generation</strong> (<em>int</em><em>, </em><em>default: 300000</em>) – number of points that will be sampled from kde</p></li>
+<li><p><strong>dim_global</strong> (<em>int</em><em>, </em><em>default: 10</em>) – dimension of the space of global variables in the network</p></li>
+<li><p><strong>dim_particle</strong> (<em>int</em><em>, </em><em>default: 3</em>) – dimension of the space of particle features</p></li>
+<li><p><strong>rng</strong> (<em>np.random.Generator</em><em>, </em><em>default: None</em>) – random number generator used for kde-resampling; please note that
+resampling of kde needs a random number generator, it will default to
+np.random, if None is given</p></li>
+<li><p><strong>set_min_pt</strong> (<em>bool</em><em>, </em><em>default: True</em>) – if True, all generated particles will be enforced to have p_t of at least
+the value specified in min_pt</p></li>
+<li><p><strong>min_pt</strong> (<em>int</em><em> or </em><em>float</em><em>, </em><em>default: 0</em>) – minimum value to which all p_t below will be set, if set_min_pt is True</p></li>
+<li><p><strong>center_gen</strong> (<em>bool</em><em>, </em><em>default: True</em>) – if True, the eta- and phi-coordinates of the generated events will be
+centered</p></li>
+<li><p><strong>order_by_pt</strong> (<em>bool</em><em>, </em><em>default: True</em>) – if True, the particles within each generated fake jet will be ordered by
+p_t in descending order</p></li>
+<li><p><strong>normalise_data</strong> (<em>bool</em><em>, </em><em>default: True</em>) – if True, the generated events will be renormalised to have the statistical
+properties of the training set</p></li>
+<li><p><strong>means</strong> (<em>list</em><em> or </em><em>np.array</em><em>, </em><em>default: np.zeros</em><em>(</em><em>3</em><em>)</em>) – mean value for each particle feature to which to renormalise the generated events</p></li>
+<li><p><strong>stds</strong> (<em>list</em><em> or </em><em>np.array</em><em>, </em><em>default: np.ones</em><em>(</em><em>3</em><em>)</em>) – standard deviation value for each particle feature to which to renormalise
+the generated events</p></li>
+<li><p><strong>norm_sigma</strong> (<em>float</em><em> or </em><em>int</em><em>, </em><em>default: 1</em>) – std-value to which the real input data was normalised</p></li>
+<li><p><strong>runs</strong> (<em>int</em><em>, </em><em>default: 10</em>) – number of disjoint subsets of generated events that will be used to compute
+the Wasserstein distances, the returned Wasserstein distances will be the
+means of all the computed distances. Note that this must be specified s.t.
+runs times the length of the dataset is &lt;= n_tot_generation</p></li>
+<li><p><strong>device</strong> (<em>str</em><em>, </em><em>default: &quot;cuda&quot;</em>) – device to which to send variables</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>w_dist_mean</strong> – Wasserstein distance for the mass averaged over all runs</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="epicgan.evaluation.generation_loop">
+<span class="sig-prename descclassname"><span class="pre">epicgan.evaluation.</span></span><span class="sig-name descname"><span class="pre">generation_loop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">network</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kde</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_tot_generation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">300000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim_global</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim_particle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order_by_pt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">set_min_pt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_pt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">center_gen</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalise_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">means</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([0.,</span> <span class="pre">0.,</span> <span class="pre">0.])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([1.,</span> <span class="pre">1.,</span> <span class="pre">1.])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm_sigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cuda'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/evaluation.html#generation_loop"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.evaluation.generation_loop" title="Permalink to this definition"></a></dt>
+<dd><p>This function generates simulated events mimicking the appearance of the
+JetNet datasets.
+First, a distribution of n_eff, which is the number of particles per jet
+with p_t != 0, is sampled from the precomputed kernel density estimation for
+the respective dataset. Values out of the range [1, n_points] are discarded.
+Note that this means that the number of returned events  can be
+a bit smaller than the specified n_tot_generation.
+Then, the specified generator network generates jets
+of particle multiplicity n_eff as often as the kernel density estimation
+yielded that value n_eff. Afterwards, zero-padding increases the final
+particle multiplicity to n_points (either 30 or 150). This way the generated
+dataset mimicks the structure of the JetNet-datasets.
+With default settings, the validation set is 15% of the total dataset
+(ca. 27,000 samples) and for each evaluation ten runs of comparisons between
+validation set and generated jets set are done. Therefore ca. 270,000 generated
+samples are required, which is why n_tot_generation defaults to 300,000 (a few
+samples could be killed by the requirement 1 &lt;= n_eff &lt;= n_points).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>network</strong> (<a class="reference internal" href="#epicgan.models.Generator" title="epicgan.models.Generator"><em>Generator</em></a>) – generator network with which to perform the evaluation</p></li>
+<li><p><strong>n_points</strong> (<em>int</em>) – number of particles per jet, 30 or 150</p></li>
+<li><p><strong>kde</strong> (<em>scipy.stats.gaussian_kde</em>) – kernel density estimation of n_eff for the dataset</p></li>
+<li><p><strong>batch_size</strong> (<em>int</em><em>, </em><em>default: 128</em>) – batch size at which noise samples are passed through the generator</p></li>
+<li><p><strong>n_tot_generation</strong> (<em>int</em><em>, </em><em>default: 300000</em>) – number of points that will be sampled from kde</p></li>
+<li><p><strong>dim_global</strong> (<em>int</em><em>, </em><em>default: 10</em>) – dimension of the space of global variables in the network</p></li>
+<li><p><strong>dim_particle</strong> (<em>int</em><em>, </em><em>default: 3</em>) – dimension of the space of particle features</p></li>
+<li><p><strong>rng</strong> (<em>np.random.Generator</em><em>, </em><em>default: None</em>) – random number generator used for kde-resampling; please note that
+resampling of kde needs a random number generator, it will default to
+np.random, if None is given</p></li>
+<li><p><strong>order_by_pt</strong> (<em>bool</em><em>, </em><em>default: True</em>) – if True, the particles within each generated fake jet will be ordered by
+p_t in descending order</p></li>
+<li><p><strong>set_min_pt</strong> (<em>bool</em><em>, </em><em>default: True</em>) – if True, all generated particles will be enforced to have p_t of at least
+the value specified in min_pt</p></li>
+<li><p><strong>min_pt</strong> (<em>int</em><em> or </em><em>float</em><em>, </em><em>default: 0</em>) – minimum value to which all p_t below will be set, if set_min_pt is True</p></li>
+<li><p><strong>center_gen</strong> (<em>bool</em><em>, </em><em>default: True</em>) – if True, the eta- and phi-coordinates of the generated events will be
+centered</p></li>
+<li><p><strong>normalise_data</strong> (<em>bool</em><em>, </em><em>default: True</em>) – if True, the generated events will be renormalised to have the statistical
+properties of the training set</p></li>
+<li><p><strong>means</strong> (<em>list</em><em> or </em><em>np.array</em><em>, </em><em>default: np.zeros</em><em>(</em><em>3</em><em>)</em>) – mean value for each particle feature to which to renormalise the generated events</p></li>
+<li><p><strong>stds</strong> (<em>list</em><em> or </em><em>np.array</em><em>, </em><em>default: np.ones</em><em>(</em><em>3</em><em>)</em>) – standard deviation value for each particle feature to which to renormalise
+the generated events</p></li>
+<li><p><strong>norm_sigma</strong> (<em>float</em><em> or </em><em>int</em><em>, </em><em>default: 1</em>) – std-value to which the real input data was normalised</p></li>
+<li><p><strong>device</strong> (<em>str</em><em>, </em><em>default: &quot;cuda&quot;</em>) – device to which to send variables</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>generated_events</strong> – array of generated events</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-epicgan.models">
+<span id="epicgan-models-module"></span><h2>epicgan.models module<a class="headerlink" href="#module-epicgan.models" title="Permalink to this headline"></a></h2>
+<p>Here, we define the models used for training.
+The EPiC-GAN-layer is defined and then implemented into the generator and
+discriminator architectures. The models are defined according to the
+EPiC-GAN paper <a class="reference external" href="https://arxiv.org/abs/2301.08128">https://arxiv.org/abs/2301.08128</a></p>
+<dl class="py class">
+<dt class="sig sig-object py" id="epicgan.models.Discriminator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">epicgan.models.</span></span><span class="sig-name descname"><span class="pre">Discriminator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_size_p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hid_size_p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hid_size_g</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hid_size_g_in</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_epic_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/models.html#Discriminator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.models.Discriminator" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
+<p>Defines the discriminator of the GAN.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_size_p</strong> (<em>int</em><em>, </em><em>default: 3</em>) – dimension of the input particle space; equals number of particle features;</p></li>
+<li><p><strong>hid_size_p</strong> (<em>int</em><em>, </em><em>default: 128</em>) – hidden dimension of the particle space in the network</p></li>
+<li><p><strong>hid_size_g</strong> (<em>int</em><em>, </em><em>default: 10</em>) – hidden dimension of the global space in the network</p></li>
+<li><p><strong>hid_size_g_in</strong> (<em>int</em><em>, </em><em>default: 128</em>) – dimension of the hidden layer in the initialisation of the global space</p></li>
+<li><p><strong>num_epic_layers</strong> (<em>int</em><em>, </em><em>default: 3</em>) – number of EPiC-layers stacked in series</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="epicgan.models.Discriminator.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/models.html#Discriminator.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.models.Discriminator.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Forward pass.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>p_data</strong> (<em>torch.Tensor</em>) – input data, either real or generated of shape [batch_size, n_eff, num_particle_features]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>out</strong> – assigned label for each event, shape [batch_size]</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="epicgan.models.EpicGanLayer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">epicgan.models.</span></span><span class="sig-name descname"><span class="pre">EpicGanLayer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hid_size_p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hid_size_g</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hid_size_g_in</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/models.html#EpicGanLayer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.models.EpicGanLayer" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
+<p>This class refers to a generic EPiC-GAN-layer as defined in the paper
+with variable input, output and hidden size. No default values given, because this constructor
+is only to be called from the constructors of the generator and discriminator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hid_size_p</strong> (<em>int</em>) – hidden dimension of the particle space</p></li>
+<li><p><strong>hid_size_g</strong> (<em>int</em>) – hidden dimension of the global space</p></li>
+<li><p><strong>hid_size_g_in</strong> (<em>in</em>) – dimension of the hidden (aggregation) layer of the global space</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="epicgan.models.EpicGanLayer.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/models.html#EpicGanLayer.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.models.EpicGanLayer.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Forward pass.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>p_data</strong> (<em>torch.Tensor</em>) – input data for particle space of shape [batch_size, n_eff, num_particle_features]</p></li>
+<li><p><strong>g_data</strong> (<em>torch.Tensor</em>) – input data for global space of shape [batch_size, input_size_g]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>p_interm</strong> (<em>torch.Tensor</em>) – output data for particle space of shape [batch_size, n_eff, num_particle_features]</p></li>
+<li><p><strong>g_interm</strong> (<em>torch.Tensor</em>) – output data for global space of shape [batch_size, input_size_g]</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="epicgan.models.Generator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">epicgan.models.</span></span><span class="sig-name descname"><span class="pre">Generator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_size_p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_size_g</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hid_size_p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hid_size_g</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hid_size_g_in</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_epic_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/models.html#Generator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.models.Generator" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
+<p>Defines the generator of the GAN.
+Note that the two hidden sizes (p and g_in) are the same in the default
+structure (both 128).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_size_p</strong> (<em>int</em><em>, </em><em>default: 3</em>) – dimension of the input particle space; equals number of particle features;
+equals also the dimension of the output particle space</p></li>
+<li><p><strong>input_size_g</strong> (<em>int</em><em>, </em><em>default: 10</em>) – dimension of the input global space</p></li>
+<li><p><strong>hid_size_p</strong> (<em>int</em><em>, </em><em>default: 128</em>) – hidden dimension of the particle space in the network</p></li>
+<li><p><strong>hid_size_g</strong> (<em>int</em><em>, </em><em>default: 10</em>) – hidden dimension of the global space in the network</p></li>
+<li><p><strong>hid_size_g_in</strong> (<em>int</em><em>, </em><em>default: 128</em>) – dimension of the hidden layer in the initial processing of the global space</p></li>
+<li><p><strong>num_epic_layers</strong> (<em>int</em><em>, </em><em>default: 6</em>) – number of EPiC-layers stacked in series</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="epicgan.models.Generator.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p_random_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g_random_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/models.html#Generator.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.models.Generator.forward" title="Permalink to this definition"></a></dt>
+<dd><p>Forward pass.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>p_random_data</strong> (<em>torch.Tensor</em>) – input noise for particle space of shape [batch_size, n_eff, num_particle_features]</p></li>
+<li><p><strong>g_random_data</strong> (<em>torch.Tensor</em>) – input noise for global space of shape [batch_size, input_size_g]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>p_interm</strong> – generated events of shape [batch_size, n_eff, num_particle_features]</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-epicgan.utils">
+<span id="epicgan-utils-module"></span><h2>epicgan.utils module<a class="headerlink" href="#module-epicgan.utils" title="Permalink to this headline"></a></h2>
+<p>General utilities.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="epicgan.utils.calc_kde">
+<span class="sig-prename descclassname"><span class="pre">epicgan.utils.</span></span><span class="sig-name descname"><span class="pre">calc_kde</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p_dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/utils.html#calc_kde"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.utils.calc_kde" title="Permalink to this definition"></a></dt>
+<dd><p>Calculates the kernel density estimation (kde) of the number of particles
+with nonzero p_t for a jet using Gaussian kernels.
+Has an option to save the kde to a .pkl-file using pickle</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>p_dataset</strong> (<em>np.array</em>) – array containing the dataset in shape [total_size, n_points, n_features]</p></li>
+<li><p><strong>file_path</strong> (<em>str</em><em>, </em><em>default = None</em>) – When specified, the function will try to dump the calculated KDE here;
+should end in .pkl</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>kde</strong> – gaussian_kde-object which can be resampled using resample()-method</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>scipy.stats.gaussian_kde</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="epicgan.utils.calc_multiplicities">
+<span class="sig-prename descclassname"><span class="pre">epicgan.utils.</span></span><span class="sig-name descname"><span class="pre">calc_multiplicities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p_dataset</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/utils.html#calc_multiplicities"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.utils.calc_multiplicities" title="Permalink to this definition"></a></dt>
+<dd><p>Calculates the number of particles with p_t &gt; 0 within a jet and calculates
+frequencies of these numbers throughout the dataset.
+Assumed shape of dataset: [total_size, n_points, n_features]</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>p_dataset</strong> (<em>np.array</em>) – array containing the dataset in shape [total_size, n_points, n_features]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>unique_vals</strong> (<em>np.array</em>) – contains the unique numbers of particles with nonzero p_t within a jet
+occuring in the dataset</p></li>
+<li><p><strong>frequencies</strong> (<em>np.array</em>) – contains the corresponding frequencies, with which the value in unique_vals
+occur.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="epicgan.utils.center_jets">
+<span class="sig-prename descclassname"><span class="pre">epicgan.utils.</span></span><span class="sig-name descname"><span class="pre">center_jets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/utils.html#center_jets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.utils.center_jets" title="Permalink to this definition"></a></dt>
+<dd><p>Centers the eta- and phi-coordinates for every jet.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>data</strong> (<em>np.array</em>) – data to be centered</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>data</strong> – centered data</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="epicgan.utils.jet_etas">
+<span class="sig-prename descclassname"><span class="pre">epicgan.utils.</span></span><span class="sig-name descname"><span class="pre">jet_etas</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/utils.html#jet_etas"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.utils.jet_etas" title="Permalink to this definition"></a></dt>
+<dd><p>Calculates pseudorapidity eta of each jet within the given dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>data</strong> (<em>np.array</em>) – data for which to compute eta, shape [array_size, n_points, n_features]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>etas</strong> – eta for every jet, shape [array_size]</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="epicgan.utils.jet_masses">
+<span class="sig-prename descclassname"><span class="pre">epicgan.utils.</span></span><span class="sig-name descname"><span class="pre">jet_masses</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/utils.html#jet_masses"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.utils.jet_masses" title="Permalink to this definition"></a></dt>
+<dd><p>Calculates the total mass of each jet within the given dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>data</strong> (<em>np.array</em>) – data for which to compute the jet masses, shape [array_size, n_points, n_features]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>masses</strong> – mass for every jet, shape [array_size]</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="epicgan.utils.jet_multiplicities">
+<span class="sig-prename descclassname"><span class="pre">epicgan.utils.</span></span><span class="sig-name descname"><span class="pre">jet_multiplicities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/utils.html#jet_multiplicities"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.utils.jet_multiplicities" title="Permalink to this definition"></a></dt>
+<dd><p>Calculates the effective particle multiplicities n_eff in data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>data</strong> (<em>np.array</em>) – data for which to compute multiplicities, shape [array_size, n_points, n_features]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>mults</strong> – effective particle multiplicities, shape [array_size]</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="epicgan.utils.jet_phis">
+<span class="sig-prename descclassname"><span class="pre">epicgan.utils.</span></span><span class="sig-name descname"><span class="pre">jet_phis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/utils.html#jet_phis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.utils.jet_phis" title="Permalink to this definition"></a></dt>
+<dd><p>Calculates the azimuthal angle phi of each jet within the given dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>data</strong> (<em>np.array</em>) – data for which to compute the jet masses, shape [array_size, n_points, n_features]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>phis</strong> – phi for every jet, shape [array_size]</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="epicgan.utils.jet_pts">
+<span class="sig-prename descclassname"><span class="pre">epicgan.utils.</span></span><span class="sig-name descname"><span class="pre">jet_pts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/utils.html#jet_pts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.utils.jet_pts" title="Permalink to this definition"></a></dt>
+<dd><p>Calculates the total transverse momentum of each jet within the given dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>data</strong> (<em>np.array</em>) – data for which to compute the jet p_t, shape [array_size, n_points, n_features]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>pts</strong> – p_t for every jet, shape [array_size]</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="epicgan.utils.load_generator">
+<span class="sig-prename descclassname"><span class="pre">epicgan.utils.</span></span><span class="sig-name descname"><span class="pre">load_generator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">folder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./saved_models'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cuda'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/utils.html#load_generator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.utils.load_generator" title="Permalink to this definition"></a></dt>
+<dd><p>Loads a GAN-generator from a file that was created using the above function save_model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>generator</strong> (<a class="reference internal" href="#epicgan.models.Generator" title="epicgan.models.Generator"><em>Generator</em></a>) – generator network of the GAN</p></li>
+<li><p><strong>file_name</strong> (<em>str</em>) – filename of the file to load</p></li>
+<li><p><strong>folder</strong> (<em>str</em><em>, </em><em>default: &quot;./saved_models&quot;</em>) – folder where to search for the file</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>generator</strong> – generator network with the parameters saved in the specified file</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#epicgan.models.Generator" title="epicgan.models.Generator">Generator</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="epicgan.utils.load_model">
+<span class="sig-prename descclassname"><span class="pre">epicgan.utils.</span></span><span class="sig-name descname"><span class="pre">load_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">discriminator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer_g</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer_d</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">folder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./saved_models'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cuda'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/utils.html#load_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.utils.load_model" title="Permalink to this definition"></a></dt>
+<dd><p>Loads a GAN consisting of generator, discriminator and optimizers
+for each from a file that was created using the above function save_model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>generator</strong> (<a class="reference internal" href="#epicgan.models.Generator" title="epicgan.models.Generator"><em>Generator</em></a>) – generator network of the GAN</p></li>
+<li><p><strong>discriminator</strong> (<a class="reference internal" href="#epicgan.models.Discriminator" title="epicgan.models.Discriminator"><em>Discriminator</em></a>) – discriminator network of the GAN</p></li>
+<li><p><strong>optimizer_g</strong> (<em>torch.optim.Optimizer</em>) – optimizer of the generator network</p></li>
+<li><p><strong>optimizer_d</strong> (<em>torch.optim.Optimizer</em>) – optimizer of the discriminator network</p></li>
+<li><p><strong>file_name</strong> (<em>str</em>) – filename of the file to load</p></li>
+<li><p><strong>folder</strong> (<em>str</em><em>, </em><em>default: &quot;./saved_models&quot;</em>) – folder where to search for the file</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>generator</strong> (<em>Generator</em>) – generator network with the parameters saved in the specified file</p></li>
+<li><p><strong>discriminator</strong> (<em>Discriminator</em>) – discriminator network with the parameters saved in the specified file</p></li>
+<li><p><strong>optimizer_g</strong> (<em>torch.optim.Optimizer</em>) – optimizer for the generator network with state stored in specified file</p></li>
+<li><p><strong>optimizer_d</strong> (<em>torch.optim.Optimizer</em>) – optimizer for the discriminator network with state stored in specified file</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="epicgan.utils.order_array_pt">
+<span class="sig-prename descclassname"><span class="pre">epicgan.utils.</span></span><span class="sig-name descname"><span class="pre">order_array_pt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/utils.html#order_array_pt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.utils.order_array_pt" title="Permalink to this definition"></a></dt>
+<dd><p>Sorts input array in p_t per jet in decreasing order.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>data</strong> (<em>np.array</em>) – unordered data</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>ordered data</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ordered_data</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="epicgan.utils.save_model">
+<span class="sig-prename descclassname"><span class="pre">epicgan.utils.</span></span><span class="sig-name descname"><span class="pre">save_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">discriminator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer_g</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer_d</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">folder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./saved_models'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/utils.html#save_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.utils.save_model" title="Permalink to this definition"></a></dt>
+<dd><p>Saves the overall GAN consisting of generator, discriminator and optimizers
+for each to a file. It saves a dictionary of all the parameters for
+all the structures using the .save_dict()-method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>generator</strong> (<a class="reference internal" href="#epicgan.models.Generator" title="epicgan.models.Generator"><em>Generator</em></a>) – generator network of the GAN</p></li>
+<li><p><strong>discriminator</strong> (<a class="reference internal" href="#epicgan.models.Discriminator" title="epicgan.models.Discriminator"><em>Discriminator</em></a>) – discriminator network of the GAN</p></li>
+<li><p><strong>optimizer_g</strong> (<em>torch.optim.Optimizer</em>) – optimizer of the generator network</p></li>
+<li><p><strong>optimizer_d</strong> (<em>torch.optim.Optimizer</em>) – optimizer of the discriminator network</p></li>
+<li><p><strong>file_name</strong> (<em>str</em>) – filename of the file to be created</p></li>
+<li><p><strong>folder</strong> (<em>str</em><em>, </em><em>default: &quot;./saved_models&quot;</em>) – folder where to put the file</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="epicgan.utils.torch_p4s_from_ptyphi">
+<span class="sig-prename descclassname"><span class="pre">epicgan.utils.</span></span><span class="sig-name descname"><span class="pre">torch_p4s_from_ptyphi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ptetaphi</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/epicgan/utils.html#torch_p4s_from_ptyphi"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#epicgan.utils.torch_p4s_from_ptyphi" title="Permalink to this definition"></a></dt>
+<dd><p>Calculates Cartesian four-vectors from [p_t, eta, phi]-representations.
+Particles are assumed massless.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>ptetaphi</strong> (<em>np.array</em>) – data in [p_t, eta, phi]-representations</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>p4s</strong> – data in Cartesian representation</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-epicgan">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-epicgan" title="Permalink to this headline"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="modules.html" class="btn btn-neutral float-left" title="cmepda_exam" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Rochus Lechler.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
